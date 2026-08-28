@@ -281,17 +281,18 @@ textarea:disabled {
 
 table {
   width: 100%;
-  min-width: 940px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 th,
 td {
-  padding: 14px 16px;
+  padding: 14px 14px;
   border-bottom: 1px solid #edf0f2;
   text-align: left;
   vertical-align: middle;
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 th {
@@ -301,6 +302,42 @@ th {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+th:nth-child(1),
+td:nth-child(1) {
+  width: 13%;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+  width: 20%;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+  width: 13%;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+  width: 17%;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+  width: 15%;
+}
+
+th:nth-child(6),
+td:nth-child(6) {
+  width: 13%;
+}
+
+th:nth-child(7),
+td:nth-child(7) {
+  width: 9%;
 }
 
 tbody tr:hover {
@@ -311,6 +348,7 @@ tbody tr:hover {
   font-family:
     "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .cell-subtitle {
@@ -323,6 +361,7 @@ tbody tr:hover {
 .badge {
   padding: 5px 8px;
   background: #f8f9fa;
+  white-space: nowrap;
 }
 
 .empty-state {
@@ -433,6 +472,16 @@ fieldset {
   .form-section {
     grid-template-columns: 1fr;
     gap: 18px;
+  }
+
+  table {
+    min-width: 760px;
+    table-layout: auto;
+  }
+
+  th,
+  td {
+    overflow-wrap: normal;
   }
 }
 
