@@ -21,6 +21,9 @@ public class AimsDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasSequence<long>("AssetIdSequence")
+        .StartsAt(1)
+        .IncrementsBy(1);
 
         ConfigureAsset(modelBuilder);
         ConfigureAssetCategory(modelBuilder);

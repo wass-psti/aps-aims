@@ -1,3 +1,4 @@
+using APS.AIMS.Application.Assets;
 using APS.AIMS.Application.AssetCategories;
 using APS.AIMS.Application.AssetLocations;
 using APS.AIMS.Application.Branches;
@@ -30,7 +31,8 @@ public static class DependencyInjection
         services.AddScoped<IDepartmentService, DepartmentService>();
         services.AddScoped<IAssetLocationService, AssetLocationService>();
         services.AddScoped<IAssetCategoryService, AssetCategoryService>();
-        
+        services.AddScoped<IAssetService, AssetService>();
+
         return services;
     }
 }
