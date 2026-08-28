@@ -1,0 +1,6 @@
+@APS.AIMS.Api_HostAddress = http://localhost:5067
+
+GET {{APS.AIMS.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
