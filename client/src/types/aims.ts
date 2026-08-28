@@ -71,43 +71,56 @@ export interface AssetCategory {
   isActive: boolean;
 }
 
+export interface Employee {
+  id: string;
+  employeeNumber?: string | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email?: string | null;
+  departmentId?: string | null;
+  departmentName?: string | null;
+  branchId?: string | null;
+  branchName?: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreateEmployeeRequest {
+  employeeNumber: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  departmentId: string | null;
+}
+
 export interface Asset {
   id: string;
   assetId: string;
   barcodeValue: string;
   name: string;
   shortDescription?: string | null;
-
   categoryId: string;
   categoryName: string;
-
   serialNumber?: string | null;
   manufacturer?: string | null;
   model?: string | null;
   partNumber?: string | null;
   legacyAssetId?: string | null;
-
   acquisitionCost?: number | null;
   currency?: string | null;
-
   companyId: string;
   companyName: string;
-
   branchId: string;
   branchName: string;
-
   departmentId?: string | null;
   departmentName?: string | null;
-
   currentLocationId: string;
   currentLocationName: string;
-
   currentCustodianId?: string | null;
   currentCustodianName?: string | null;
-
   status: AssetStatus;
   condition: AssetCondition;
-
   isArchived: boolean;
   createdAt: string;
   updatedAt?: string | null;
@@ -116,26 +129,20 @@ export interface Asset {
 export interface CreateAssetRequest {
   name: string;
   shortDescription: string;
-
   categoryId: string;
-
   serialNumber: string;
   manufacturer: string;
   model: string;
   partNumber: string;
   legacyAssetId: string;
-
   acquisitionCost: number | null;
   currency: string;
-
   companyId: string;
   branchId: string;
   departmentId: string | null;
   currentLocationId: string;
-
   currentCustodianId: string | null;
   barcodeValue: string | null;
-
   status: AssetStatus;
   condition: AssetCondition;
 }
@@ -143,15 +150,12 @@ export interface CreateAssetRequest {
 export interface UpdateAssetRequest {
   name: string;
   shortDescription: string;
-
   categoryId: string;
-
   serialNumber: string;
   manufacturer: string;
   model: string;
   partNumber: string;
   legacyAssetId: string;
-
   acquisitionCost: number | null;
   currency: string;
 }
@@ -165,4 +169,31 @@ export interface AssetFilters {
   locationId?: string;
   status?: AssetStatus | "";
   condition?: AssetCondition | "";
+}
+
+export interface AssetCustodyHistory {
+  id: string;
+  assetId: string;
+  employeeId: string;
+  employeeName: string;
+  employeeNumber?: string | null;
+  issuedFromLocationId: string;
+  issuedFromLocationName: string;
+  returnedToLocationId?: string | null;
+  returnedToLocationName?: string | null;
+  issuedAt: string;
+  returnedAt?: string | null;
+  issueNotes?: string | null;
+  returnNotes?: string | null;
+  isOpen: boolean;
+}
+
+export interface IssueAssetRequest {
+  employeeId: string;
+  notes: string;
+}
+
+export interface ReturnAssetRequest {
+  locationId: string;
+  notes: string;
 }

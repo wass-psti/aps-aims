@@ -18,6 +18,11 @@ public sealed class ApiExceptionHandler(
                 "Validation error",
                 exception.Message),
 
+            KeyNotFoundException => (
+                StatusCodes.Status404NotFound,
+                "Resource not found",
+                exception.Message),
+
             InvalidOperationException => (
                 StatusCodes.Status409Conflict,
                 "Operation conflict",

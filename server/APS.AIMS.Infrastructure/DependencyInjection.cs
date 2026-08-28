@@ -1,9 +1,11 @@
-using APS.AIMS.Application.Assets;
 using APS.AIMS.Application.AssetCategories;
 using APS.AIMS.Application.AssetLocations;
+using APS.AIMS.Application.Assets;
 using APS.AIMS.Application.Branches;
 using APS.AIMS.Application.Companies;
+using APS.AIMS.Application.Custody;
 using APS.AIMS.Application.Departments;
+using APS.AIMS.Application.Employees;
 using APS.AIMS.Infrastructure.Persistence;
 using APS.AIMS.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +34,8 @@ public static class DependencyInjection
         services.AddScoped<IAssetLocationService, AssetLocationService>();
         services.AddScoped<IAssetCategoryService, AssetCategoryService>();
         services.AddScoped<IAssetService, AssetService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IAssetCustodyService, AssetCustodyService>();
 
         return services;
     }

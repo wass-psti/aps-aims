@@ -1,12 +1,17 @@
 import type {
   Asset,
   AssetCategory,
+  AssetCustodyHistory,
   AssetFilters,
   AssetLocation,
   Branch,
   Company,
   CreateAssetRequest,
+  CreateEmployeeRequest,
   Department,
+  Employee,
+  IssueAssetRequest,
+  ReturnAssetRequest,
   UpdateAssetRequest,
 } from "../types/aims";
 
@@ -22,17 +27,12 @@ function buildQuery(
   const params = new URLSearchParams();
 
   for (const [key, value] of Object.entries(values)) {
-    if (
-      value !== undefined &&
-      value !== null &&
-      value !== ""
-    ) {
+    if (value !== undefined && value !== null && value !== "") {
       params.set(key, String(value));
     }
   }
 
   const query = params.toString();
-
   return query ? `?${query}` : "";
 }
 
@@ -49,19 +49,13 @@ async function request<T>(
   });
 
   if (!response.ok) {
-    let message =
-      `Request failed with status ${response.status}.`;
+    let message = `Request failed with status ${response.status}.`;
 
     try {
-      const problem =
-        (await response.json()) as ProblemDetails;
-
-      message =
-        problem.detail ||
-        problem.title ||
-        message;
+      const problem = (await response.json()) as ProblemDetails;
+      message = problem.detail || problem.title || message;
     } catch {
-      // Keep the fallback message for non-JSON responses.
+      // Keep fallback message.
     }
 
     throw new Error(message);
@@ -76,14 +70,10 @@ async function request<T>(
 
 export const aimsApi = {
   getAssets: (filters: AssetFilters = {}) =>
-    request<Asset[]>(
-      `/api/assets${buildQuery(filters)}`,
-    ),
+    request<Asset[]>(`/api/assets${buildQuery(filters)}`),
 
   getAsset: (id: string) =>
-    request<Asset>(
-      `/api/assets/${encodeURIComponent(id)}`,
-    ),
+    request<Asset>(`/api/assets/${encodeURIComponent(id)}`),
 
   createAsset: (payload: CreateAssetRequest) =>
     request<Asset>("/api/assets", {
@@ -91,38 +81,54 @@ export const aimsApi = {
       body: JSON.stringify(payload),
     }),
 
-  updateAsset: (
-    id: string,
-    payload: UpdateAssetRequest,
-  ) =>
+  updateAsset: (id: string, payload: UpdateAssetRequest) =>
+    request<Asset>(`/api/assets/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+
+  getCustodyHistory: (assetId: string) =>
+    request<AssetCustodyHistory[]>(
+      `/api/assets/${encodeURIComponent(assetId)}/custody`,
+    ),
+
+  issueAsset: (assetId: string, payload: IssueAssetRequest) =>
     request<Asset>(
-      `/api/assets/${encodeURIComponent(id)}`,
+      `/api/assets/${encodeURIComponent(assetId)}/custody/issue`,
       {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify(payload),
       },
     ),
 
-  getCompanies: () =>
-    request<Company[]>("/api/companies"),
+  returnAsset: (assetId: string, payload: ReturnAssetRequest) =>
+    request<Asset>(
+      `/api/assets/${encodeURIComponent(assetId)}/custody/return`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+
+  getEmployees: () => request<Employee[]>("/api/employees"),
+
+  createEmployee: (payload: CreateEmployeeRequest) =>
+    request<Employee>("/api/employees", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getCompanies: () => request<Company[]>("/api/companies"),
 
   getBranchesByCompany: (companyId: string) =>
-    request<Branch[]>(
-      `/api/branches/company/${companyId}`,
-    ),
+    request<Branch[]>(`/api/branches/company/${companyId}`),
 
   getDepartmentsByBranch: (branchId: string) =>
-    request<Department[]>(
-      `/api/departments/branch/${branchId}`,
-    ),
+    request<Department[]>(`/api/departments/branch/${branchId}`),
 
   getLocationsByBranch: (branchId: string) =>
-    request<AssetLocation[]>(
-      `/api/asset-locations/branch/${branchId}`,
-    ),
+    request<AssetLocation[]>(`/api/asset-locations/branch/${branchId}`),
 
   getCategories: () =>
-    request<AssetCategory[]>(
-      "/api/asset-categories",
-    ),
+    request<AssetCategory[]>("/api/asset-categories"),
 };

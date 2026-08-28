@@ -1,13 +1,21 @@
 import { useState } from "react";
 import "./App.css";
+import "./v0.5.css";
 import { AssetRegistrationForm } from "./components/AssetRegistrationForm";
 import { AssetRegistry } from "./components/AssetRegistry";
+import { EmployeeManagement } from "./components/EmployeeManagement";
 
-type View = "registry" | "register";
+type View = "registry" | "register" | "employees";
 
 function App() {
   const [view, setView] = useState<View>("registry");
   const [refreshToken, setRefreshToken] = useState(0);
+
+  const pageTitle = {
+    registry: "Asset Registry",
+    register: "New Asset Registration",
+    employees: "Employees",
+  }[view];
 
   return (
     <div className="app-shell">
@@ -36,6 +44,14 @@ function App() {
           >
             Register Asset
           </button>
+
+          <button
+            type="button"
+            className={view === "employees" ? "active" : ""}
+            onClick={() => setView("employees")}
+          >
+            Employees
+          </button>
         </nav>
       </header>
 
@@ -43,19 +59,17 @@ function App() {
         <div className="page-heading">
           <div>
             <p className="eyebrow">APS Group</p>
-            <h1>
-              {view === "registry"
-                ? "Asset Registry"
-                : "New Asset Registration"}
-            </h1>
+            <h1>{pageTitle}</h1>
           </div>
 
-          <div className="version-chip">v0.4.0</div>
+          <div className="version-chip">v0.5.0</div>
         </div>
 
-        {view === "registry" ? (
+        {view === "registry" && (
           <AssetRegistry refreshToken={refreshToken} />
-        ) : (
+        )}
+
+        {view === "register" && (
           <AssetRegistrationForm
             onCreated={() => {
               setRefreshToken((current) => current + 1);
@@ -63,6 +77,8 @@ function App() {
             }}
           />
         )}
+
+        {view === "employees" && <EmployeeManagement />}
       </main>
     </div>
   );

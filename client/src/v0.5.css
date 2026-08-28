@@ -1,0 +1,153 @@
+.custody-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.custody-alert {
+  margin: 0 0 16px;
+}
+
+.custody-form {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #dfe4e8;
+  border-radius: 8px;
+  background: #fafbfb;
+}
+
+.custody-form .field + .field {
+  margin-top: 14px;
+}
+
+.history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.history-item {
+  padding: 14px;
+  border: 1px solid #e1e5e8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.history-item-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.history-item-heading span {
+  color: #78828b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.history-item-heading .history-open {
+  color: #8a5a00;
+}
+
+.history-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.history-meta dt {
+  color: #7b858e;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.history-meta dd {
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+
+.history-notes {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #edf0f2;
+  color: #55616b;
+  font-size: 12px;
+}
+
+.history-notes p {
+  margin: 4px 0;
+}
+
+.history-empty {
+  padding: 22px 0 4px;
+  color: #7a858f;
+  text-align: center;
+  font-size: 12px;
+}
+
+.employee-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.7fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.employee-list {
+  border-top: 1px solid #e5e9ec;
+}
+
+.employee-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 16px;
+  padding: 15px 24px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.employee-row strong,
+.employee-row span {
+  display: block;
+}
+
+.employee-row strong {
+  font-size: 13px;
+}
+
+.employee-row span {
+  margin-top: 3px;
+  color: #77828b;
+  font-size: 11px;
+}
+
+.employee-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 22px 24px;
+  border-top: 1px solid #e8ebee;
+}
+
+@media (max-width: 1000px) {
+  .employee-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .history-meta,
+  .employee-form,
+  .employee-row {
+    grid-template-columns: 1fr;
+  }
+
+  .custody-actions {
+    width: 100%;
+  }
+
+  .custody-actions .button {
+    width: 100%;
+  }
+}
