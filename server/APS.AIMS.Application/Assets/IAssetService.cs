@@ -3,6 +3,7 @@ namespace APS.AIMS.Application.Assets;
 public interface IAssetService
 {
     Task<IReadOnlyList<AssetDto>> GetAllAsync(
+        AssetFilterRequest filter,
         CancellationToken cancellationToken = default);
 
     Task<AssetDto?> GetByIdAsync(
@@ -15,5 +16,10 @@ public interface IAssetService
 
     Task<AssetDto> CreateAsync(
         CreateAssetRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<AssetDto?> UpdateAsync(
+        Guid id,
+        UpdateAssetRequest request,
         CancellationToken cancellationToken = default);
 }

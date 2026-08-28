@@ -10,10 +10,12 @@ public sealed class AssetsController(
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AssetDto>>> GetAll(
+        [FromQuery] AssetFilterRequest filter,
         CancellationToken cancellationToken)
     {
         return Ok(
             await assetService.GetAllAsync(
+                filter,
                 cancellationToken));
     }
 
@@ -58,5 +60,21 @@ public sealed class AssetsController(
             nameof(GetById),
             new { id = asset.Id },
             asset);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<AssetDto>> Update(
+        Guid id,
+        UpdateAssetRequest request,
+        CancellationToken cancellationToken)
+    {
+        var asset = await assetService.UpdateAsync(
+            id,
+            request,
+            cancellationToken);
+
+        return asset is null
+            ? NotFound()
+            : Ok(asset);
     }
 }

@@ -50,7 +50,7 @@ function App() {
             </h1>
           </div>
 
-          <div className="version-chip">v0.3.0</div>
+          <div className="version-chip">v0.4.0</div>
         </div>
 
         {view === "registry" ? (

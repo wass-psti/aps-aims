@@ -139,3 +139,30 @@ export interface CreateAssetRequest {
   status: AssetStatus;
   condition: AssetCondition;
 }
+
+export interface UpdateAssetRequest {
+  name: string;
+  shortDescription: string;
+
+  categoryId: string;
+
+  serialNumber: string;
+  manufacturer: string;
+  model: string;
+  partNumber: string;
+  legacyAssetId: string;
+
+  acquisitionCost: number | null;
+  currency: string;
+}
+
+export interface AssetFilters {
+  search?: string;
+  categoryId?: string;
+  companyId?: string;
+  branchId?: string;
+  departmentId?: string;
+  locationId?: string;
+  status?: AssetStatus | "";
+  condition?: AssetCondition | "";
+}

@@ -16,11 +16,85 @@ public sealed class AssetService : IAssetService
     }
 
     public async Task<IReadOnlyList<AssetDto>> GetAllAsync(
+        AssetFilterRequest filter,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Assets
+        var query = _dbContext.Assets
             .AsNoTracking()
-            .Where(asset => !asset.IsArchived)
+            .AsQueryable();
+
+        if (!filter.IncludeArchived)
+        {
+            query = query.Where(asset => !asset.IsArchived);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.Trim();
+            var pattern = $"%{search}%";
+
+            query = query.Where(asset =>
+                EF.Functions.ILike(asset.AssetId, pattern) ||
+                EF.Functions.ILike(asset.BarcodeValue, pattern) ||
+                EF.Functions.ILike(asset.Name, pattern) ||
+                (asset.SerialNumber != null &&
+                 EF.Functions.ILike(asset.SerialNumber, pattern)) ||
+                (asset.Manufacturer != null &&
+                 EF.Functions.ILike(asset.Manufacturer, pattern)) ||
+                (asset.Model != null &&
+                 EF.Functions.ILike(asset.Model, pattern)) ||
+                (asset.PartNumber != null &&
+                 EF.Functions.ILike(asset.PartNumber, pattern)) ||
+                (asset.LegacyAssetId != null &&
+                 EF.Functions.ILike(asset.LegacyAssetId, pattern)) ||
+                EF.Functions.ILike(asset.Category.Name, pattern) ||
+                EF.Functions.ILike(asset.Branch.Name, pattern) ||
+                EF.Functions.ILike(asset.CurrentLocation.Name, pattern));
+        }
+
+        if (filter.CategoryId.HasValue)
+        {
+            query = query.Where(
+                asset => asset.CategoryId == filter.CategoryId.Value);
+        }
+
+        if (filter.CompanyId.HasValue)
+        {
+            query = query.Where(
+                asset => asset.CompanyId == filter.CompanyId.Value);
+        }
+
+        if (filter.BranchId.HasValue)
+        {
+            query = query.Where(
+                asset => asset.BranchId == filter.BranchId.Value);
+        }
+
+        if (filter.DepartmentId.HasValue)
+        {
+            query = query.Where(
+                asset => asset.DepartmentId == filter.DepartmentId.Value);
+        }
+
+        if (filter.LocationId.HasValue)
+        {
+            query = query.Where(
+                asset => asset.CurrentLocationId == filter.LocationId.Value);
+        }
+
+        if (filter.Status.HasValue)
+        {
+            query = query.Where(
+                asset => asset.Status == filter.Status.Value);
+        }
+
+        if (filter.Condition.HasValue)
+        {
+            query = query.Where(
+                asset => asset.Condition == filter.Condition.Value);
+        }
+
+        return await query
             .OrderBy(asset => asset.AssetId)
             .Select(AssetProjection.ToDto)
             .ToListAsync(cancellationToken);
@@ -54,7 +128,10 @@ public sealed class AssetService : IAssetService
         CreateAssetRequest request,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequest(request);
+        ValidateProfile(
+            request.Name,
+            request.AcquisitionCost,
+            request.Currency);
 
         await ValidateRelationshipsAsync(
             request,
@@ -70,6 +147,7 @@ public sealed class AssetService : IAssetService
         await ValidateUniqueIdentifiersAsync(
             request.SerialNumber,
             barcodeValue,
+            null,
             cancellationToken);
 
         var asset = new Asset
@@ -101,32 +179,95 @@ public sealed class AssetService : IAssetService
         };
 
         _dbContext.Assets.Add(asset);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return await GetRequiredByIdAsync(
+            asset.Id,
+            cancellationToken);
+    }
+
+    public async Task<AssetDto?> UpdateAsync(
+        Guid id,
+        UpdateAssetRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateProfile(
+            request.Name,
+            request.AcquisitionCost,
+            request.Currency);
+
+        var asset = await _dbContext.Assets
+            .FirstOrDefaultAsync(
+                item => item.Id == id,
+                cancellationToken);
+
+        if (asset is null)
+        {
+            return null;
+        }
+
+        await ValidateCategoryAsync(
+            request.CategoryId,
+            cancellationToken);
+
+        await ValidateUniqueIdentifiersAsync(
+            request.SerialNumber,
+            null,
+            id,
+            cancellationToken);
+
+        asset.Name = TextNormalizer.Required(request.Name);
+        asset.ShortDescription =
+            TextNormalizer.Optional(request.ShortDescription);
+
+        asset.CategoryId = request.CategoryId;
+
+        asset.SerialNumber =
+            TextNormalizer.Optional(request.SerialNumber);
+        asset.Manufacturer =
+            TextNormalizer.Optional(request.Manufacturer);
+        asset.Model =
+            TextNormalizer.Optional(request.Model);
+        asset.PartNumber =
+            TextNormalizer.Optional(request.PartNumber);
+        asset.LegacyAssetId =
+            TextNormalizer.Optional(request.LegacyAssetId);
+
+        asset.AcquisitionCost = request.AcquisitionCost;
+        asset.Currency =
+            TextNormalizer.CodeOrNull(request.Currency);
+
+        asset.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return await GetByIdAsync(asset.Id, cancellationToken)
-            ?? throw new InvalidOperationException(
-                "Asset was created but could not be retrieved.");
+        return await GetRequiredByIdAsync(
+            asset.Id,
+            cancellationToken);
     }
 
-    private static void ValidateRequest(
-        CreateAssetRequest request)
+    private static void ValidateProfile(
+        string name,
+        decimal? acquisitionCost,
+        string? currency)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
+        if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException(
                 "Asset name is required.");
         }
 
-        if (request.AcquisitionCost < 0)
+        if (acquisitionCost < 0)
         {
             throw new ArgumentException(
                 "Acquisition cost cannot be negative.");
         }
 
-        var currency = TextNormalizer.Optional(request.Currency);
+        var normalizedCurrency =
+            TextNormalizer.Optional(currency);
 
-        if (currency is not null && currency.Length != 3)
+        if (normalizedCurrency is not null &&
+            normalizedCurrency.Length != 3)
         {
             throw new ArgumentException(
                 "Currency must use a three-letter ISO code.");
@@ -139,11 +280,11 @@ public sealed class AssetService : IAssetService
     {
         var company = await _dbContext.Companies
             .AsNoTracking()
-            .Where(x => x.Id == request.CompanyId)
-            .Select(x => new
+            .Where(item => item.Id == request.CompanyId)
+            .Select(item => new
             {
-                x.Id,
-                x.IsActive
+                item.Id,
+                item.IsActive
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -155,12 +296,11 @@ public sealed class AssetService : IAssetService
 
         var branch = await _dbContext.Branches
             .AsNoTracking()
-            .Where(x => x.Id == request.BranchId)
-            .Select(x => new
+            .Where(item => item.Id == request.BranchId)
+            .Select(item => new
             {
-                x.Id,
-                x.CompanyId,
-                x.IsActive
+                item.CompanyId,
+                item.IsActive
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -172,25 +312,17 @@ public sealed class AssetService : IAssetService
                 "Selected branch is invalid for this company.");
         }
 
-        var categoryIsValid = await _dbContext.AssetCategories
-            .AsNoTracking()
-            .AnyAsync(
-                x => x.Id == request.CategoryId &&
-                     x.IsActive,
-                cancellationToken);
-
-        if (!categoryIsValid)
-        {
-            throw new ArgumentException(
-                "Selected asset category does not exist or is inactive.");
-        }
+        await ValidateCategoryAsync(
+            request.CategoryId,
+            cancellationToken);
 
         var locationIsValid = await _dbContext.AssetLocations
             .AsNoTracking()
             .AnyAsync(
-                x => x.Id == request.CurrentLocationId &&
-                     x.BranchId == request.BranchId &&
-                     x.IsActive,
+                item =>
+                    item.Id == request.CurrentLocationId &&
+                    item.BranchId == request.BranchId &&
+                    item.IsActive,
                 cancellationToken);
 
         if (!locationIsValid)
@@ -204,9 +336,10 @@ public sealed class AssetService : IAssetService
             var departmentIsValid = await _dbContext.Departments
                 .AsNoTracking()
                 .AnyAsync(
-                    x => x.Id == request.DepartmentId.Value &&
-                         x.BranchId == request.BranchId &&
-                         x.IsActive,
+                    item =>
+                        item.Id == request.DepartmentId.Value &&
+                        item.BranchId == request.BranchId &&
+                        item.IsActive,
                     cancellationToken);
 
             if (!departmentIsValid)
@@ -221,8 +354,9 @@ public sealed class AssetService : IAssetService
             var custodianIsValid = await _dbContext.Employees
                 .AsNoTracking()
                 .AnyAsync(
-                    x => x.Id == request.CurrentCustodianId.Value &&
-                         x.IsActive,
+                    item =>
+                        item.Id == request.CurrentCustodianId.Value &&
+                        item.IsActive,
                     cancellationToken);
 
             if (!custodianIsValid)
@@ -233,21 +367,50 @@ public sealed class AssetService : IAssetService
         }
     }
 
-    private async Task ValidateUniqueIdentifiersAsync(
-        string? serialNumber,
-        string barcodeValue,
+    private async Task ValidateCategoryAsync(
+        Guid categoryId,
         CancellationToken cancellationToken)
     {
-        var barcodeExists = await _dbContext.Assets
+        var categoryIsValid = await _dbContext.AssetCategories
             .AsNoTracking()
             .AnyAsync(
-                x => x.BarcodeValue == barcodeValue,
+                item =>
+                    item.Id == categoryId &&
+                    item.IsActive,
                 cancellationToken);
 
-        if (barcodeExists)
+        if (!categoryIsValid)
         {
-            throw new InvalidOperationException(
-                $"Barcode '{barcodeValue}' is already assigned.");
+            throw new ArgumentException(
+                "Selected asset category does not exist or is inactive.");
+        }
+    }
+
+    private async Task ValidateUniqueIdentifiersAsync(
+        string? serialNumber,
+        string? barcodeValue,
+        Guid? excludedAssetId,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(barcodeValue))
+        {
+            var normalizedBarcode =
+                TextNormalizer.Required(barcodeValue);
+
+            var barcodeExists = await _dbContext.Assets
+                .AsNoTracking()
+                .AnyAsync(
+                    item =>
+                        item.BarcodeValue == normalizedBarcode &&
+                        (!excludedAssetId.HasValue ||
+                         item.Id != excludedAssetId.Value),
+                    cancellationToken);
+
+            if (barcodeExists)
+            {
+                throw new InvalidOperationException(
+                    $"Barcode '{normalizedBarcode}' is already assigned.");
+            }
         }
 
         var normalizedSerial =
@@ -261,7 +424,10 @@ public sealed class AssetService : IAssetService
         var serialExists = await _dbContext.Assets
             .AsNoTracking()
             .AnyAsync(
-                x => x.SerialNumber == normalizedSerial,
+                item =>
+                    item.SerialNumber == normalizedSerial &&
+                    (!excludedAssetId.HasValue ||
+                     item.Id != excludedAssetId.Value),
                 cancellationToken);
 
         if (serialExists)
@@ -271,11 +437,22 @@ public sealed class AssetService : IAssetService
         }
     }
 
+    private async Task<AssetDto> GetRequiredByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        return await GetByIdAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException(
+                "Asset was saved but could not be retrieved.");
+    }
+
     private async Task<string> GenerateAssetIdAsync(
         CancellationToken cancellationToken)
     {
         var connection = _dbContext.Database.GetDbConnection();
-        var shouldClose = connection.State != System.Data.ConnectionState.Open;
+        var shouldClose =
+            connection.State !=
+            System.Data.ConnectionState.Open;
 
         if (shouldClose)
         {
@@ -284,14 +461,18 @@ public sealed class AssetService : IAssetService
 
         try
         {
-            await using var command = connection.CreateCommand();
+            await using var command =
+                connection.CreateCommand();
+
             command.CommandText =
                 """SELECT nextval('"AssetIdSequence"');""";
 
-            var result = await command.ExecuteScalarAsync(
-                cancellationToken);
+            var result =
+                await command.ExecuteScalarAsync(
+                    cancellationToken);
 
-            var sequence = Convert.ToInt64(result);
+            var sequence =
+                Convert.ToInt64(result);
 
             return $"AST-{sequence:D6}";
         }
