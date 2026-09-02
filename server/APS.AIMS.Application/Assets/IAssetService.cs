@@ -14,6 +14,10 @@ public interface IAssetService
         string assetId,
         CancellationToken cancellationToken = default);
 
+    Task<AssetDto?> GetByBarcodeAsync(
+        string barcode,
+        CancellationToken cancellationToken = default);
+
     Task<AssetDto> CreateAsync(
         CreateAssetRequest request,
         CancellationToken cancellationToken = default);

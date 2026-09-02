@@ -1,4 +1,6 @@
 using APS.AIMS.Application.Companies;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -12,7 +14,9 @@ public sealed class CompaniesController(
     public async Task<ActionResult<IReadOnlyList<CompanyDto>>> GetAll(
         CancellationToken cancellationToken)
     {
-        return Ok(await companyService.GetAllAsync(cancellationToken));
+        return Ok(
+            await companyService.GetAllAsync(
+                cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
@@ -20,42 +24,45 @@ public sealed class CompaniesController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var company = await companyService.GetByIdAsync(id, cancellationToken);
+        var item = await companyService.GetByIdAsync(
+            id,
+            cancellationToken);
 
-        return company is null
-            ? NotFound()
-            : Ok(company);
+        return item is null ? NotFound() : Ok(item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPost]
     public async Task<ActionResult<CompanyDto>> Create(
         CreateCompanyRequest request,
         CancellationToken cancellationToken)
     {
-        var company = await companyService.CreateAsync(request, cancellationToken);
+        var item = await companyService.CreateAsync(
+            request,
+            cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
-            new { id = company.Id },
-            company);
+            new { id = item.Id },
+            item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<CompanyDto>> Update(
         Guid id,
         UpdateCompanyRequest request,
         CancellationToken cancellationToken)
     {
-        var company = await companyService.UpdateAsync(
+        var item = await companyService.UpdateAsync(
             id,
             request,
             cancellationToken);
 
-        return company is null
-            ? NotFound()
-            : Ok(company);
+        return item is null ? NotFound() : Ok(item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPatch("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate(
         Guid id,
@@ -65,8 +72,6 @@ public sealed class CompaniesController(
             id,
             cancellationToken);
 
-        return result
-            ? NoContent()
-            : NotFound();
+        return result ? NoContent() : NotFound();
     }
 }

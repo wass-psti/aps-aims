@@ -22,6 +22,10 @@ public sealed class EmployeeDto
 
     public string? BranchName { get; init; }
 
+    public Guid? CompanyId { get; init; }
+
+    public string? CompanyName { get; init; }
+
     public bool IsActive { get; init; }
 
     public DateTimeOffset CreatedAt { get; init; }

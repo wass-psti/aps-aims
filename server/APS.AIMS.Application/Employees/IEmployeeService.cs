@@ -13,4 +13,13 @@ public interface IEmployeeService
     Task<EmployeeDto> CreateAsync(
         CreateEmployeeRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<EmployeeDto?> UpdateAsync(
+        Guid id,
+        UpdateEmployeeRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
 }

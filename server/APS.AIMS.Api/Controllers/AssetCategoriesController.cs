@@ -1,4 +1,6 @@
 using APS.AIMS.Application.AssetCategories;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -26,11 +28,10 @@ public sealed class AssetCategoriesController(
             id,
             cancellationToken);
 
-        return category is null
-            ? NotFound()
-            : Ok(category);
+        return category is null ? NotFound() : Ok(category);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPost]
     public async Task<ActionResult<AssetCategoryDto>> Create(
         CreateAssetCategoryRequest request,
@@ -46,6 +47,7 @@ public sealed class AssetCategoriesController(
             category);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<AssetCategoryDto>> Update(
         Guid id,
@@ -57,11 +59,10 @@ public sealed class AssetCategoriesController(
             request,
             cancellationToken);
 
-        return category is null
-            ? NotFound()
-            : Ok(category);
+        return category is null ? NotFound() : Ok(category);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPatch("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate(
         Guid id,
@@ -71,8 +72,6 @@ public sealed class AssetCategoriesController(
             id,
             cancellationToken);
 
-        return result
-            ? NoContent()
-            : NotFound();
+        return result ? NoContent() : NotFound();
     }
 }

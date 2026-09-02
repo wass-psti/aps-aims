@@ -3,56 +3,36 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Infrastructure;
 
-public sealed class ApiExceptionHandler(
-    ILogger<ApiExceptionHandler> logger) : IExceptionHandler
+public sealed class ApiExceptionHandler :
+    IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var (statusCode, title, detail) = exception switch
+        var (status, title) = exception switch
         {
-            ArgumentException => (
-                StatusCodes.Status400BadRequest,
-                "Validation error",
-                exception.Message),
-
-            KeyNotFoundException => (
-                StatusCodes.Status404NotFound,
-                "Resource not found",
-                exception.Message),
-
-            InvalidOperationException => (
-                StatusCodes.Status409Conflict,
-                "Operation conflict",
-                exception.Message),
-
-            _ => (
-                StatusCodes.Status500InternalServerError,
-                "Internal server error",
-                "An unexpected error occurred.")
+            ArgumentException =>
+                (StatusCodes.Status400BadRequest, "Invalid request"),
+            UnauthorizedAccessException =>
+                (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            KeyNotFoundException =>
+                (StatusCodes.Status404NotFound, "Not found"),
+            InvalidOperationException =>
+                (StatusCodes.Status409Conflict, "Operation conflict"),
+            _ =>
+                (StatusCodes.Status500InternalServerError, "Server error")
         };
-
-        if (statusCode == StatusCodes.Status500InternalServerError)
-        {
-            logger.LogError(
-                exception,
-                "Unhandled exception while processing {Method} {Path}",
-                httpContext.Request.Method,
-                httpContext.Request.Path);
-        }
 
         var problem = new ProblemDetails
         {
-            Status = statusCode,
+            Status = status,
             Title = title,
-            Detail = detail,
-            Instance = httpContext.Request.Path
+            Detail = exception.Message
         };
 
-        httpContext.Response.StatusCode = statusCode;
-        httpContext.Response.ContentType = "application/problem+json";
+        httpContext.Response.StatusCode = status;
 
         await httpContext.Response.WriteAsJsonAsync(
             problem,

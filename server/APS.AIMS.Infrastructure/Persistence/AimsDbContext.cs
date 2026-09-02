@@ -15,6 +15,13 @@ public class AimsDbContext(
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<AssetTransaction> AssetTransactions => Set<AssetTransaction>();
     public DbSet<AssetCustodyHistory> AssetCustodyHistories => Set<AssetCustodyHistory>();
+    public DbSet<AssetMaintenance> AssetMaintenances => Set<AssetMaintenance>();
+    public DbSet<AssetCalibration> AssetCalibrations => Set<AssetCalibration>();
+    public DbSet<InventoryCampaign> InventoryCampaigns => Set<InventoryCampaign>();
+    public DbSet<InventoryCount> InventoryCounts => Set<InventoryCount>();
+    public DbSet<AssetIncident> AssetIncidents => Set<AssetIncident>();
+    public DbSet<ApplicationUser> ApplicationUsers => Set<ApplicationUser>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +40,13 @@ public class AimsDbContext(
         ConfigureEmployee(modelBuilder);
         ConfigureAssetTransaction(modelBuilder);
         ConfigureAssetCustodyHistory(modelBuilder);
+        ConfigureAssetMaintenance(modelBuilder);
+        ConfigureAssetCalibration(modelBuilder);
+        ConfigureInventoryCampaign(modelBuilder);
+        ConfigureInventoryCount(modelBuilder);
+        ConfigureAssetIncident(modelBuilder);
+        ConfigureApplicationUser(modelBuilder);
+        ConfigureAuditLog(modelBuilder);
     }
 
     private static void ConfigureAsset(ModelBuilder modelBuilder)
@@ -40,7 +54,6 @@ public class AimsDbContext(
         var entity = modelBuilder.Entity<Asset>();
 
         entity.HasKey(x => x.Id);
-
         entity.HasIndex(x => x.AssetId).IsUnique();
         entity.HasIndex(x => x.BarcodeValue).IsUnique();
         entity.HasIndex(x => x.SerialNumber);
@@ -140,7 +153,6 @@ public class AimsDbContext(
 
         entity.HasKey(x => x.Id);
         entity.HasIndex(x => x.Code).IsUnique();
-
         entity.Property(x => x.Code).HasMaxLength(50);
         entity.Property(x => x.Name).HasMaxLength(150);
     }
@@ -151,7 +163,6 @@ public class AimsDbContext(
 
         entity.HasKey(x => x.Id);
         entity.HasIndex(x => new { x.CompanyId, x.Code }).IsUnique();
-
         entity.Property(x => x.Code).HasMaxLength(50);
         entity.Property(x => x.Name).HasMaxLength(150);
 
@@ -167,7 +178,6 @@ public class AimsDbContext(
 
         entity.HasKey(x => x.Id);
         entity.HasIndex(x => new { x.BranchId, x.Code }).IsUnique();
-
         entity.Property(x => x.Code).HasMaxLength(50);
         entity.Property(x => x.Name).HasMaxLength(150);
 
@@ -182,9 +192,7 @@ public class AimsDbContext(
         var entity = modelBuilder.Entity<Employee>();
 
         entity.HasKey(x => x.Id);
-
-        entity.HasIndex(x => x.EmployeeNumber)
-            .IsUnique();
+        entity.HasIndex(x => x.EmployeeNumber).IsUnique();
 
         entity.Property(x => x.EmployeeNumber).HasMaxLength(50);
         entity.Property(x => x.FirstName).HasMaxLength(100);
@@ -202,7 +210,6 @@ public class AimsDbContext(
         var entity = modelBuilder.Entity<AssetTransaction>();
 
         entity.HasKey(x => x.Id);
-
         entity.HasIndex(x => new { x.AssetId, x.OccurredAt });
 
         entity.Property(x => x.Type)
@@ -217,8 +224,7 @@ public class AimsDbContext(
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        entity.Property(x => x.Notes)
-            .HasMaxLength(1000);
+        entity.Property(x => x.Notes).HasMaxLength(1000);
 
         entity.HasOne(x => x.Asset)
             .WithMany()
@@ -251,18 +257,14 @@ public class AimsDbContext(
         var entity = modelBuilder.Entity<AssetCustodyHistory>();
 
         entity.HasKey(x => x.Id);
-
         entity.HasIndex(x => new { x.AssetId, x.IssuedAt });
 
         entity.HasIndex(x => x.AssetId)
             .IsUnique()
             .HasFilter("\"ReturnedAt\" IS NULL");
 
-        entity.Property(x => x.IssueNotes)
-            .HasMaxLength(1000);
-
-        entity.Property(x => x.ReturnNotes)
-            .HasMaxLength(1000);
+        entity.Property(x => x.IssueNotes).HasMaxLength(1000);
+        entity.Property(x => x.ReturnNotes).HasMaxLength(1000);
 
         entity.HasOne(x => x.Asset)
             .WithMany()
@@ -284,4 +286,216 @@ public class AimsDbContext(
             .HasForeignKey(x => x.ReturnedToLocationId)
             .OnDelete(DeleteBehavior.Restrict);
     }
+
+    private static void ConfigureAssetMaintenance(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<AssetMaintenance>();
+
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => new { x.AssetId, x.StartedAt });
+
+        entity.HasIndex(x => x.AssetId)
+            .IsUnique()
+            .HasFilter("\"CompletedAt\" IS NULL");
+
+        entity.Property(x => x.Description).HasMaxLength(500);
+        entity.Property(x => x.ServiceProvider).HasMaxLength(200);
+        entity.Property(x => x.StartNotes).HasMaxLength(1000);
+        entity.Property(x => x.CompletionNotes).HasMaxLength(1000);
+        entity.Property(x => x.Cost).HasPrecision(18, 2);
+        entity.Property(x => x.Currency).HasMaxLength(3);
+
+        entity.HasOne(x => x.Asset)
+            .WithMany()
+            .HasForeignKey(x => x.AssetId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureAssetCalibration(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<AssetCalibration>();
+
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => new { x.AssetId, x.StartedAt });
+
+        entity.HasIndex(x => x.AssetId)
+            .IsUnique()
+            .HasFilter("\"CompletedAt\" IS NULL");
+
+        entity.Property(x => x.ServiceProvider).HasMaxLength(200);
+        entity.Property(x => x.StartNotes).HasMaxLength(1000);
+        entity.Property(x => x.CertificateNumber).HasMaxLength(150);
+        entity.Property(x => x.CompletionNotes).HasMaxLength(1000);
+
+        entity.Property(x => x.Result)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.HasOne(x => x.Asset)
+            .WithMany()
+            .HasForeignKey(x => x.AssetId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureInventoryCampaign(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<InventoryCampaign>();
+
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => new { x.BranchId, x.Status });
+
+        entity.Property(x => x.Name).HasMaxLength(200);
+        entity.Property(x => x.Description).HasMaxLength(1000);
+
+        entity.Property(x => x.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.HasOne(x => x.Branch)
+            .WithMany()
+            .HasForeignKey(x => x.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureInventoryCount(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<InventoryCount>();
+
+        entity.HasKey(x => x.Id);
+
+        entity.HasIndex(x => new { x.CampaignId, x.AssetId })
+            .IsUnique();
+
+        entity.HasIndex(x => new { x.CampaignId, x.CountedAt });
+
+        entity.Property(x => x.SystemCondition)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.Property(x => x.ObservedCondition)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.Property(x => x.Result)
+            .HasConversion<string>()
+            .HasMaxLength(80);
+
+        entity.Property(x => x.Notes).HasMaxLength(1000);
+
+        entity.HasOne(x => x.Campaign)
+            .WithMany()
+            .HasForeignKey(x => x.CampaignId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(x => x.Asset)
+            .WithMany()
+            .HasForeignKey(x => x.AssetId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(x => x.SystemLocation)
+            .WithMany()
+            .HasForeignKey(x => x.SystemLocationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(x => x.ObservedLocation)
+            .WithMany()
+            .HasForeignKey(x => x.ObservedLocationId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureAssetIncident(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<AssetIncident>();
+
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => new { x.AssetId, x.ReportedAt });
+        entity.HasIndex(x => x.Status);
+
+        entity.Property(x => x.Type)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.Property(x => x.Severity)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.Property(x => x.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        entity.Property(x => x.Description).HasMaxLength(2000);
+        entity.Property(x => x.ResolutionNotes).HasMaxLength(2000);
+
+        entity.HasOne(x => x.Asset)
+            .WithMany()
+            .HasForeignKey(x => x.AssetId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+
+    private static void ConfigureApplicationUser(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<ApplicationUser>();
+
+        entity.HasKey(x => x.Id);
+        entity.HasIndex(x => x.Email).IsUnique();
+
+        entity.Property(x => x.Email)
+            .HasMaxLength(250);
+
+        entity.Property(x => x.PasswordHash)
+            .HasMaxLength(500);
+
+        entity.Property(x => x.FirstName)
+            .HasMaxLength(100);
+
+        entity.Property(x => x.LastName)
+            .HasMaxLength(100);
+
+        entity.Property(x => x.Role)
+            .HasMaxLength(50);
+    }
+
+
+    private static void ConfigureAuditLog(ModelBuilder modelBuilder)
+    {
+        var entity = modelBuilder.Entity<AuditLog>();
+
+        entity.HasKey(x => x.Id);
+
+        entity.HasIndex(x => x.OccurredAt);
+        entity.HasIndex(x => x.UserId);
+        entity.HasIndex(x => new { x.Resource, x.OccurredAt });
+
+        entity.Property(x => x.UserEmail)
+            .HasMaxLength(250);
+
+        entity.Property(x => x.UserDisplayName)
+            .HasMaxLength(200);
+
+        entity.Property(x => x.UserRole)
+            .HasMaxLength(50);
+
+        entity.Property(x => x.Action)
+            .HasMaxLength(150);
+
+        entity.Property(x => x.Resource)
+            .HasMaxLength(120);
+
+        entity.Property(x => x.ResourceId)
+            .HasMaxLength(120);
+
+        entity.Property(x => x.HttpMethod)
+            .HasMaxLength(16);
+
+        entity.Property(x => x.Path)
+            .HasMaxLength(1000);
+
+        entity.Property(x => x.IpAddress)
+            .HasMaxLength(80);
+
+        entity.Property(x => x.UserAgent)
+            .HasMaxLength(500);
+    }
+
 }

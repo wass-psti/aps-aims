@@ -1,4 +1,6 @@
 using APS.AIMS.Application.Employees;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -28,11 +30,10 @@ public sealed class EmployeesController(
             id,
             cancellationToken);
 
-        return employee is null
-            ? NotFound()
-            : Ok(employee);
+        return employee is null ? NotFound() : Ok(employee);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageEmployees)]
     [HttpPost]
     public async Task<ActionResult<EmployeeDto>> Create(
         CreateEmployeeRequest request,
@@ -46,5 +47,33 @@ public sealed class EmployeesController(
             nameof(GetById),
             new { id = employee.Id },
             employee);
+    }
+
+    [Authorize(Roles = AimsAuthorization.CanManageEmployees)]
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<EmployeeDto>> Update(
+        Guid id,
+        UpdateEmployeeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var employee = await employeeService.UpdateAsync(
+            id,
+            request,
+            cancellationToken);
+
+        return employee is null ? NotFound() : Ok(employee);
+    }
+
+    [Authorize(Roles = AimsAuthorization.CanManageEmployees)]
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var deleted = await employeeService.DeleteAsync(
+            id,
+            cancellationToken);
+
+        return deleted ? NoContent() : NotFound();
     }
 }

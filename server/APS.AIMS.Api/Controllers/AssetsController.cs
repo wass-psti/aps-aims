@@ -1,4 +1,6 @@
 using APS.AIMS.Application.Assets;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -28,9 +30,7 @@ public sealed class AssetsController(
             id,
             cancellationToken);
 
-        return asset is null
-            ? NotFound()
-            : Ok(asset);
+        return asset is null ? NotFound() : Ok(asset);
     }
 
     [HttpGet("asset-id/{assetId}")]
@@ -42,11 +42,22 @@ public sealed class AssetsController(
             assetId,
             cancellationToken);
 
-        return asset is null
-            ? NotFound()
-            : Ok(asset);
+        return asset is null ? NotFound() : Ok(asset);
     }
 
+    [HttpGet("barcode/{barcode}")]
+    public async Task<ActionResult<AssetDto>> GetByBarcode(
+        string barcode,
+        CancellationToken cancellationToken)
+    {
+        var asset = await assetService.GetByBarcodeAsync(
+            barcode,
+            cancellationToken);
+
+        return asset is null ? NotFound() : Ok(asset);
+    }
+
+    [Authorize(Roles = AimsAuthorization.CanManageAssets)]
     [HttpPost]
     public async Task<ActionResult<AssetDto>> Create(
         CreateAssetRequest request,
@@ -62,6 +73,7 @@ public sealed class AssetsController(
             asset);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageAssets)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<AssetDto>> Update(
         Guid id,
@@ -73,8 +85,6 @@ public sealed class AssetsController(
             request,
             cancellationToken);
 
-        return asset is null
-            ? NotFound()
-            : Ok(asset);
+        return asset is null ? NotFound() : Ok(asset);
     }
 }

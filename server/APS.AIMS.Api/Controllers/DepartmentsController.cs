@@ -1,4 +1,6 @@
 using APS.AIMS.Application.Departments;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -12,7 +14,9 @@ public sealed class DepartmentsController(
     public async Task<ActionResult<IReadOnlyList<DepartmentDto>>> GetAll(
         CancellationToken cancellationToken)
     {
-        return Ok(await departmentService.GetAllAsync(cancellationToken));
+        return Ok(
+            await departmentService.GetAllAsync(
+                cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
@@ -20,13 +24,11 @@ public sealed class DepartmentsController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var department = await departmentService.GetByIdAsync(
+        var item = await departmentService.GetByIdAsync(
             id,
             cancellationToken);
 
-        return department is null
-            ? NotFound()
-            : Ok(department);
+        return item is null ? NotFound() : Ok(item);
     }
 
     [HttpGet("branch/{branchId:guid}")]
@@ -40,37 +42,38 @@ public sealed class DepartmentsController(
                 cancellationToken));
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPost]
     public async Task<ActionResult<DepartmentDto>> Create(
         CreateDepartmentRequest request,
         CancellationToken cancellationToken)
     {
-        var department = await departmentService.CreateAsync(
+        var item = await departmentService.CreateAsync(
             request,
             cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
-            new { id = department.Id },
-            department);
+            new { id = item.Id },
+            item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<DepartmentDto>> Update(
         Guid id,
         UpdateDepartmentRequest request,
         CancellationToken cancellationToken)
     {
-        var department = await departmentService.UpdateAsync(
+        var item = await departmentService.UpdateAsync(
             id,
             request,
             cancellationToken);
 
-        return department is null
-            ? NotFound()
-            : Ok(department);
+        return item is null ? NotFound() : Ok(item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPatch("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate(
         Guid id,
@@ -80,8 +83,6 @@ public sealed class DepartmentsController(
             id,
             cancellationToken);
 
-        return result
-            ? NoContent()
-            : NotFound();
+        return result ? NoContent() : NotFound();
     }
 }

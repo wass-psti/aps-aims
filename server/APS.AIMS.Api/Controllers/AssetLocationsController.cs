@@ -1,4 +1,6 @@
 using APS.AIMS.Application.AssetLocations;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -26,9 +28,7 @@ public sealed class AssetLocationsController(
             id,
             cancellationToken);
 
-        return location is null
-            ? NotFound()
-            : Ok(location);
+        return location is null ? NotFound() : Ok(location);
     }
 
     [HttpGet("branch/{branchId:guid}")]
@@ -42,6 +42,7 @@ public sealed class AssetLocationsController(
                 cancellationToken));
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPost]
     public async Task<ActionResult<AssetLocationDto>> Create(
         CreateAssetLocationRequest request,
@@ -57,6 +58,7 @@ public sealed class AssetLocationsController(
             location);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<AssetLocationDto>> Update(
         Guid id,
@@ -68,11 +70,10 @@ public sealed class AssetLocationsController(
             request,
             cancellationToken);
 
-        return location is null
-            ? NotFound()
-            : Ok(location);
+        return location is null ? NotFound() : Ok(location);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPatch("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate(
         Guid id,
@@ -82,8 +83,6 @@ public sealed class AssetLocationsController(
             id,
             cancellationToken);
 
-        return result
-            ? NoContent()
-            : NotFound();
+        return result ? NoContent() : NotFound();
     }
 }

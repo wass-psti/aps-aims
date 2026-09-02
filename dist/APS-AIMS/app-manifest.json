@@ -1,0 +1,13 @@
+{
+  "id": "aps-aims",
+  "name": "APS AIMS",
+  "version": "1.0.0",
+  "description": "APS Group Asset Inventory and Management System",
+  "entryPoint": "launch-windows.cmd",
+  "port": 5175,
+  "route": "/",
+  "launchers": {
+    "windows": "launch-windows.cmd",
+    "macos": "launch-macos.command"
+  }
+}

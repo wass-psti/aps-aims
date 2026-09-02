@@ -60,7 +60,8 @@ public sealed class AssetCustodyService : IAssetCustodyService
         await using var transaction = await _dbContext.Database
             .BeginTransactionAsync(cancellationToken);
 
-        var asset = await GetAssetForUpdateAsync(
+        var asset = await AssetWriteSupport.GetAssetForUpdateAsync(
+            _dbContext,
             assetId,
             cancellationToken);
 
@@ -106,19 +107,14 @@ public sealed class AssetCustodyService : IAssetCustodyService
             IssueNotes = notes
         };
 
-        var transactionRecord = new AssetTransaction
-        {
-            AssetId = asset.Id,
-            Type = AssetTransactionType.Issue,
-            FromCustodianId = asset.CurrentCustodianId,
-            ToCustodianId = employee.Id,
-            FromLocationId = asset.CurrentLocationId,
-            ToLocationId = asset.CurrentLocationId,
-            FromStatus = asset.Status,
-            ToStatus = AssetStatus.Issued,
-            Notes = notes,
-            OccurredAt = now
-        };
+        var transactionRecord = AssetWriteSupport.CreateTransaction(
+            asset,
+            AssetTransactionType.Issue,
+            employee.Id,
+            asset.CurrentLocationId,
+            AssetStatus.Issued,
+            notes,
+            now);
 
         asset.CurrentCustodianId = employee.Id;
         asset.Status = AssetStatus.Issued;
@@ -141,7 +137,8 @@ public sealed class AssetCustodyService : IAssetCustodyService
         await using var transaction = await _dbContext.Database
             .BeginTransactionAsync(cancellationToken);
 
-        var asset = await GetAssetForUpdateAsync(
+        var asset = await AssetWriteSupport.GetAssetForUpdateAsync(
+            _dbContext,
             assetId,
             cancellationToken);
 
@@ -187,27 +184,19 @@ public sealed class AssetCustodyService : IAssetCustodyService
 
         var now = DateTimeOffset.UtcNow;
         var notes = TextNormalizer.Optional(request.Notes);
-        var previousCustodianId = asset.CurrentCustodianId;
-        var previousLocationId = asset.CurrentLocationId;
-        var previousStatus = asset.Status;
+
+        var transactionRecord = AssetWriteSupport.CreateTransaction(
+            asset,
+            AssetTransactionType.Return,
+            null,
+            returnLocation.Id,
+            AssetStatus.Available,
+            notes,
+            now);
 
         custody.ReturnedAt = now;
         custody.ReturnedToLocationId = returnLocation.Id;
         custody.ReturnNotes = notes;
-
-        var transactionRecord = new AssetTransaction
-        {
-            AssetId = asset.Id,
-            Type = AssetTransactionType.Return,
-            FromCustodianId = previousCustodianId,
-            ToCustodianId = null,
-            FromLocationId = previousLocationId,
-            ToLocationId = returnLocation.Id,
-            FromStatus = previousStatus,
-            ToStatus = AssetStatus.Available,
-            Notes = notes,
-            OccurredAt = now
-        };
 
         asset.CurrentCustodianId = null;
         asset.CurrentLocationId = returnLocation.Id;
@@ -220,16 +209,6 @@ public sealed class AssetCustodyService : IAssetCustodyService
         await transaction.CommitAsync(cancellationToken);
 
         return await GetRequiredAssetAsync(asset.Id, cancellationToken);
-    }
-
-    private async Task<Asset?> GetAssetForUpdateAsync(
-        Guid assetId,
-        CancellationToken cancellationToken)
-    {
-        return await _dbContext.Assets
-            .FromSqlInterpolated(
-                $"""SELECT * FROM "Assets" WHERE "Id" = {assetId} FOR UPDATE""")
-            .SingleOrDefaultAsync(cancellationToken);
     }
 
     private async Task<AssetDto> GetRequiredAssetAsync(

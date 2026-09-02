@@ -28,30 +28,9 @@ public sealed class EmployeeService : IEmployeeService
             query = query.Where(employee => employee.IsActive);
         }
 
-        return await query
+        return await Project(query)
             .OrderBy(employee => employee.LastName)
             .ThenBy(employee => employee.FirstName)
-            .Select(employee => new EmployeeDto
-            {
-                Id = employee.Id,
-                EmployeeNumber = employee.EmployeeNumber,
-                FirstName = employee.FirstName,
-                LastName = employee.LastName,
-                DisplayName = employee.FirstName + " " + employee.LastName,
-                Email = employee.Email,
-                DepartmentId = employee.DepartmentId,
-                DepartmentName = employee.Department != null
-                    ? employee.Department.Name
-                    : null,
-                BranchId = employee.Department != null
-                    ? employee.Department.BranchId
-                    : null,
-                BranchName = employee.Department != null
-                    ? employee.Department.Branch.Name
-                    : null,
-                IsActive = employee.IsActive,
-                CreatedAt = employee.CreatedAt
-            })
             .ToListAsync(cancellationToken);
     }
 
@@ -59,30 +38,10 @@ public sealed class EmployeeService : IEmployeeService
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Employees
-            .AsNoTracking()
-            .Where(employee => employee.Id == id)
-            .Select(employee => new EmployeeDto
-            {
-                Id = employee.Id,
-                EmployeeNumber = employee.EmployeeNumber,
-                FirstName = employee.FirstName,
-                LastName = employee.LastName,
-                DisplayName = employee.FirstName + " " + employee.LastName,
-                Email = employee.Email,
-                DepartmentId = employee.DepartmentId,
-                DepartmentName = employee.Department != null
-                    ? employee.Department.Name
-                    : null,
-                BranchId = employee.Department != null
-                    ? employee.Department.BranchId
-                    : null,
-                BranchName = employee.Department != null
-                    ? employee.Department.Branch.Name
-                    : null,
-                IsActive = employee.IsActive,
-                CreatedAt = employee.CreatedAt
-            })
+        return await Project(
+                _dbContext.Employees
+                    .AsNoTracking()
+                    .Where(employee => employee.Id == id))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -90,28 +49,166 @@ public sealed class EmployeeService : IEmployeeService
         CreateEmployeeRequest request,
         CancellationToken cancellationToken = default)
     {
-        var firstName = TextNormalizer.Required(request.FirstName);
-        var lastName = TextNormalizer.Required(request.LastName);
-        var employeeNumber = TextNormalizer.CodeOrNull(request.EmployeeNumber);
-        var email = TextNormalizer.Optional(request.Email);
+        var normalized = await ValidateAndNormalizeAsync(
+            request.EmployeeNumber,
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.DepartmentId,
+            excludedEmployeeId: null,
+            cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(firstName))
+        var employee = new Employee
+        {
+            EmployeeNumber = normalized.EmployeeNumber,
+            FirstName = normalized.FirstName,
+            LastName = normalized.LastName,
+            Email = normalized.Email,
+            DepartmentId = request.DepartmentId,
+            IsActive = true
+        };
+
+        _dbContext.Employees.Add(employee);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return await GetRequiredAsync(employee.Id, cancellationToken);
+    }
+
+    public async Task<EmployeeDto?> UpdateAsync(
+        Guid id,
+        UpdateEmployeeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var employee = await _dbContext.Employees
+            .FirstOrDefaultAsync(
+                item => item.Id == id,
+                cancellationToken);
+
+        if (employee is null)
+        {
+            return null;
+        }
+
+        var normalized = await ValidateAndNormalizeAsync(
+            request.EmployeeNumber,
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.DepartmentId,
+            id,
+            cancellationToken);
+
+        if (!request.IsActive)
+        {
+            var isCurrentCustodian = await _dbContext.Assets
+                .AsNoTracking()
+                .AnyAsync(
+                    asset => asset.CurrentCustodianId == id,
+                    cancellationToken);
+
+            if (isCurrentCustodian)
+            {
+                throw new InvalidOperationException(
+                    "Return all assets currently assigned to this employee before deactivating the employee.");
+            }
+        }
+
+        employee.EmployeeNumber = normalized.EmployeeNumber;
+        employee.FirstName = normalized.FirstName;
+        employee.LastName = normalized.LastName;
+        employee.Email = normalized.Email;
+        employee.DepartmentId = request.DepartmentId;
+        employee.IsActive = request.IsActive;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return await GetRequiredAsync(employee.Id, cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var employee = await _dbContext.Employees
+            .FirstOrDefaultAsync(
+                item => item.Id == id,
+                cancellationToken);
+
+        if (employee is null)
+        {
+            return false;
+        }
+
+        var hasCurrentAsset = await _dbContext.Assets
+            .AsNoTracking()
+            .AnyAsync(
+                asset => asset.CurrentCustodianId == id,
+                cancellationToken);
+
+        if (hasCurrentAsset)
+        {
+            throw new InvalidOperationException(
+                "This employee currently holds an asset and cannot be permanently deleted. Return the asset first.");
+        }
+
+        var hasCustodyHistory = await _dbContext.AssetCustodyHistories
+            .AsNoTracking()
+            .AnyAsync(
+                history => history.EmployeeId == id,
+                cancellationToken);
+
+        var hasTransactionHistory = await _dbContext.AssetTransactions
+            .AsNoTracking()
+            .AnyAsync(
+                transaction =>
+                    transaction.FromCustodianId == id ||
+                    transaction.ToCustodianId == id,
+                cancellationToken);
+
+        if (hasCustodyHistory || hasTransactionHistory)
+        {
+            throw new InvalidOperationException(
+                "This employee is referenced by asset history and cannot be permanently deleted without breaking audit records. Mark the employee inactive instead.");
+        }
+
+        _dbContext.Employees.Remove(employee);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    private async Task<NormalizedEmployee> ValidateAndNormalizeAsync(
+        string? employeeNumber,
+        string firstName,
+        string lastName,
+        string? email,
+        Guid? departmentId,
+        Guid? excludedEmployeeId,
+        CancellationToken cancellationToken)
+    {
+        var normalizedFirstName = TextNormalizer.Required(firstName);
+        var normalizedLastName = TextNormalizer.Required(lastName);
+        var normalizedEmployeeNumber =
+            TextNormalizer.CodeOrNull(employeeNumber);
+        var normalizedEmail = TextNormalizer.Optional(email);
+
+        if (string.IsNullOrWhiteSpace(normalizedFirstName))
         {
             throw new ArgumentException("First name is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(lastName))
+        if (string.IsNullOrWhiteSpace(normalizedLastName))
         {
             throw new ArgumentException("Last name is required.");
         }
 
-        if (request.DepartmentId.HasValue)
+        if (departmentId.HasValue)
         {
             var departmentIsValid = await _dbContext.Departments
                 .AsNoTracking()
                 .AnyAsync(
                     department =>
-                        department.Id == request.DepartmentId.Value &&
+                        department.Id == departmentId.Value &&
                         department.IsActive,
                     cancellationToken);
 
@@ -122,35 +219,75 @@ public sealed class EmployeeService : IEmployeeService
             }
         }
 
-        if (employeeNumber is not null)
+        if (normalizedEmployeeNumber is not null)
         {
-            var employeeNumberExists = await _dbContext.Employees
+            var duplicateExists = await _dbContext.Employees
                 .AsNoTracking()
                 .AnyAsync(
-                    employee => employee.EmployeeNumber == employeeNumber,
+                    employee =>
+                        employee.EmployeeNumber == normalizedEmployeeNumber &&
+                        (!excludedEmployeeId.HasValue ||
+                         employee.Id != excludedEmployeeId.Value),
                     cancellationToken);
 
-            if (employeeNumberExists)
+            if (duplicateExists)
             {
                 throw new InvalidOperationException(
-                    $"Employee number '{employeeNumber}' already exists.");
+                    $"Employee number '{normalizedEmployeeNumber}' already exists.");
             }
         }
 
-        var employee = new Employee
-        {
-            EmployeeNumber = employeeNumber,
-            FirstName = firstName,
-            LastName = lastName,
-            Email = email,
-            DepartmentId = request.DepartmentId
-        };
-
-        _dbContext.Employees.Add(employee);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return await GetByIdAsync(employee.Id, cancellationToken)
-            ?? throw new InvalidOperationException(
-                "Employee was created but could not be retrieved.");
+        return new NormalizedEmployee(
+            normalizedEmployeeNumber,
+            normalizedFirstName,
+            normalizedLastName,
+            normalizedEmail);
     }
+
+    private async Task<EmployeeDto> GetRequiredAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        return await GetByIdAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException(
+                "Employee was saved but could not be retrieved.");
+    }
+
+    private static IQueryable<EmployeeDto> Project(
+        IQueryable<Employee> query)
+    {
+        return query.Select(employee => new EmployeeDto
+        {
+            Id = employee.Id,
+            EmployeeNumber = employee.EmployeeNumber,
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            DisplayName = employee.FirstName + " " + employee.LastName,
+            Email = employee.Email,
+            DepartmentId = employee.DepartmentId,
+            DepartmentName = employee.Department != null
+                ? employee.Department.Name
+                : null,
+            BranchId = employee.Department != null
+                ? employee.Department.BranchId
+                : null,
+            BranchName = employee.Department != null
+                ? employee.Department.Branch.Name
+                : null,
+            CompanyId = employee.Department != null
+                ? employee.Department.Branch.CompanyId
+                : null,
+            CompanyName = employee.Department != null
+                ? employee.Department.Branch.Company.Name
+                : null,
+            IsActive = employee.IsActive,
+            CreatedAt = employee.CreatedAt
+        });
+    }
+
+    private sealed record NormalizedEmployee(
+        string? EmployeeNumber,
+        string FirstName,
+        string LastName,
+        string? Email);
 }

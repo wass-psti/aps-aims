@@ -1,4 +1,6 @@
 using APS.AIMS.Application.Branches;
+using APS.AIMS.Domain.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APS.AIMS.Api.Controllers;
@@ -12,7 +14,9 @@ public sealed class BranchesController(
     public async Task<ActionResult<IReadOnlyList<BranchDto>>> GetAll(
         CancellationToken cancellationToken)
     {
-        return Ok(await branchService.GetAllAsync(cancellationToken));
+        return Ok(
+            await branchService.GetAllAsync(
+                cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
@@ -20,11 +24,11 @@ public sealed class BranchesController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var branch = await branchService.GetByIdAsync(id, cancellationToken);
+        var item = await branchService.GetByIdAsync(
+            id,
+            cancellationToken);
 
-        return branch is null
-            ? NotFound()
-            : Ok(branch);
+        return item is null ? NotFound() : Ok(item);
     }
 
     [HttpGet("company/{companyId:guid}")]
@@ -38,37 +42,38 @@ public sealed class BranchesController(
                 cancellationToken));
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPost]
     public async Task<ActionResult<BranchDto>> Create(
         CreateBranchRequest request,
         CancellationToken cancellationToken)
     {
-        var branch = await branchService.CreateAsync(
+        var item = await branchService.CreateAsync(
             request,
             cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
-            new { id = branch.Id },
-            branch);
+            new { id = item.Id },
+            item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<BranchDto>> Update(
         Guid id,
         UpdateBranchRequest request,
         CancellationToken cancellationToken)
     {
-        var branch = await branchService.UpdateAsync(
+        var item = await branchService.UpdateAsync(
             id,
             request,
             cancellationToken);
 
-        return branch is null
-            ? NotFound()
-            : Ok(branch);
+        return item is null ? NotFound() : Ok(item);
     }
 
+    [Authorize(Roles = AimsAuthorization.CanManageMasterData)]
     [HttpPatch("{id:guid}/deactivate")]
     public async Task<IActionResult> Deactivate(
         Guid id,
@@ -78,8 +83,6 @@ public sealed class BranchesController(
             id,
             cancellationToken);
 
-        return result
-            ? NoContent()
-            : NotFound();
+        return result ? NoContent() : NotFound();
     }
 }
