@@ -4,6 +4,7 @@ import {
   type FormEvent,
 } from "react";
 import { aimsApi } from "../lib/api";
+import { getStoredRole, hasCapability } from "../lib/permissions";
 import type {
   Asset,
   AssetCustodyHistory,
@@ -124,11 +125,21 @@ export function AssetCustodyPanel({
     }
   }
 
+  const canOperate =
+    hasCapability(
+      getStoredRole(),
+      "operateCustody",
+    );
+
   const canIssue =
-    asset.status === "Available" && !asset.currentCustodianId;
+    canOperate &&
+    asset.status === "Available" &&
+    !asset.currentCustodianId;
 
   const canReturn =
-    asset.status === "Issued" && Boolean(asset.currentCustodianId);
+    canOperate &&
+    asset.status === "Issued" &&
+    Boolean(asset.currentCustodianId);
 
   return (
     <div className="drawer-section">

@@ -1,0 +1,92 @@
+.service-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.service-alert {
+  margin: 0 0 16px;
+}
+
+.service-form {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #dfe4e8;
+  border-radius: 8px;
+  background: #fafbfb;
+}
+
+.service-form .field + .field {
+  margin-top: 14px;
+}
+
+.service-form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.service-history-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.service-history-grid h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.service-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.service-history-item {
+  padding: 13px;
+  border: 1px solid #e1e5e8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.service-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.service-history-heading strong {
+  font-size: 12px;
+}
+
+.service-history-heading span {
+  color: #6f7982;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.service-history-item p {
+  margin: 4px 0;
+  color: #59656f;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .service-form-grid,
+  .service-history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-actions {
+    width: 100%;
+  }
+
+  .service-actions .button {
+    width: 100%;
+  }
+}

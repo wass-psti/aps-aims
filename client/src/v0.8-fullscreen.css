@@ -1,0 +1,67 @@
+/*
+ * APS AIMS v0.8.0 asset-detail navigation refinement.
+ * The detail overlay now uses the full viewport rather than a side drawer.
+ */
+
+.drawer-backdrop {
+  align-items: stretch;
+  justify-content: stretch;
+  background: #fff;
+}
+
+.asset-drawer {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  border-left: 0;
+  box-shadow: none;
+}
+
+.asset-drawer .drawer-header {
+  z-index: 20;
+}
+
+.asset-row {
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.asset-row:hover {
+  background: #f5f7f8;
+}
+
+.asset-row:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid #263746;
+  outline-offset: -2px;
+  background: #f5f7f8;
+}
+
+.asset-row:active {
+  background: #edf1f3;
+}
+
+.asset-row td {
+  cursor: pointer;
+}
+
+.asset-row .asset-link {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .asset-drawer {
+    width: 100vw;
+  }
+}

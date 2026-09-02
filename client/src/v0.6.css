@@ -1,0 +1,78 @@
+.transaction-alert {
+  margin: 0 0 16px;
+}
+
+.transaction-form {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #dfe4e8;
+  border-radius: 8px;
+  background: #fafbfb;
+}
+
+.transaction-form .field + .field {
+  margin-top: 14px;
+}
+
+.transaction-list {
+  display: grid;
+  gap: 12px;
+}
+
+.transaction-item {
+  padding: 14px;
+  border: 1px solid #e1e5e8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.transaction-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.transaction-heading strong {
+  font-size: 13px;
+}
+
+.transaction-heading span {
+  color: #7b858e;
+  font-size: 11px;
+}
+
+.transaction-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin: 0;
+}
+
+.transaction-meta dt {
+  color: #7b858e;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.transaction-meta dd {
+  margin: 3px 0 0;
+  color: #263039;
+  font-size: 12px;
+}
+
+.transaction-note {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #edf0f2;
+  color: #55616b;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .transaction-meta {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,24 @@
+.audit-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-top: 1px solid #edf0f2;
+}
+
+.audit-toolbar .search-field {
+  width: min(520px, 100%);
+}
+
+.audit-failed {
+  background: #fff0f0;
+  color: #8d3030;
+}
+
+@media (max-width: 700px) {
+  .audit-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

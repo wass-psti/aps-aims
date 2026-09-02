@@ -8,6 +8,7 @@ import { aimsApi } from "../lib/api";
 import type {
   CreateEmployeeRequest,
   Employee,
+  UpdateEmployeeRequest,
 } from "../types/aims";
 
 const emptyForm = {
@@ -18,12 +19,17 @@ const emptyForm = {
   companyId: "",
   branchId: "",
   departmentId: "",
+  isActive: true,
 };
+
+type EmployeeForm = typeof emptyForm;
 
 export function EmployeeManagement() {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<EmployeeForm>(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +42,7 @@ export function EmployeeManagement() {
     setLoading(true);
 
     try {
-      setEmployees(await aimsApi.getEmployees());
+      setEmployees(await aimsApi.getEmployees(true));
       setError(null);
     } catch (loadError) {
       setError(
@@ -53,7 +59,10 @@ export function EmployeeManagement() {
     loadEmployees();
   }, []);
 
-  function updateField(key: keyof typeof form, value: string) {
+  function updateField<K extends keyof EmployeeForm>(
+    key: K,
+    value: EmployeeForm[K],
+  ) {
     setForm((current) => {
       const next = { ...current, [key]: value };
 
@@ -70,6 +79,27 @@ export function EmployeeManagement() {
     });
   }
 
+  function clearForm() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setError(null);
+  }
+
+  function editEmployee(employee: Employee) {
+    setEditingId(employee.id);
+    setForm({
+      employeeNumber: employee.employeeNumber ?? "",
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email ?? "",
+      companyId: employee.companyId ?? "",
+      branchId: employee.branchId ?? "",
+      departmentId: employee.departmentId ?? "",
+      isActive: employee.isActive,
+    });
+    setError(null);
+  }
+
   async function submitEmployee(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -78,29 +108,72 @@ export function EmployeeManagement() {
       return;
     }
 
-    const payload: CreateEmployeeRequest = {
-      employeeNumber: form.employeeNumber.trim(),
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      email: form.email.trim(),
-      departmentId: form.departmentId || null,
-    };
-
     setSaving(true);
     setError(null);
 
     try {
-      await aimsApi.createEmployee(payload);
-      setForm(emptyForm);
+      if (editingId) {
+        const payload: UpdateEmployeeRequest = {
+          employeeNumber: form.employeeNumber.trim(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          departmentId: form.departmentId || null,
+          isActive: form.isActive,
+        };
+
+        await aimsApi.updateEmployee(editingId, payload);
+      } else {
+        const payload: CreateEmployeeRequest = {
+          employeeNumber: form.employeeNumber.trim(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          departmentId: form.departmentId || null,
+        };
+
+        await aimsApi.createEmployee(payload);
+      }
+
+      clearForm();
       await loadEmployees();
     } catch (saveError) {
       setError(
         saveError instanceof Error
           ? saveError.message
-          : "Unable to create employee.",
+          : "Unable to save employee.",
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function deleteEmployee(employee: Employee) {
+    const confirmed = window.confirm(
+      `Permanently delete ${employee.displayName} from the database?`,
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(employee.id);
+    setError(null);
+
+    try {
+      await aimsApi.deleteEmployee(employee.id);
+
+      if (editingId === employee.id) {
+        clearForm();
+      }
+
+      await loadEmployees();
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to delete employee.",
+      );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -112,7 +185,7 @@ export function EmployeeManagement() {
             <p className="eyebrow">People</p>
             <h2>Employees</h2>
             <p className="muted">
-              Active employees can receive issued assets.
+              Edit employee records or permanently delete unused records.
             </p>
           </div>
         </div>
@@ -126,12 +199,21 @@ export function EmployeeManagement() {
         ) : (
           <div className="employee-list">
             {employees.map((employee) => (
-              <div className="employee-row" key={employee.id}>
+              <div className="employee-row employee-row-actions" key={employee.id}>
                 <div>
-                  <strong>{employee.displayName}</strong>
-                  <span>
-                    {employee.employeeNumber || "No employee number"}
-                  </span>
+                  <div className="employee-name-line">
+                    <strong>{employee.displayName}</strong>
+                    <span
+                      className={
+                        employee.isActive
+                          ? "employee-status active"
+                          : "employee-status inactive"
+                      }
+                    >
+                      {employee.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <span>{employee.employeeNumber || "No employee number"}</span>
                 </div>
 
                 <div>
@@ -142,6 +224,25 @@ export function EmployeeManagement() {
                 <div>
                   <span>{employee.email || "No email"}</span>
                 </div>
+
+                <div className="employee-actions">
+                  <button
+                    type="button"
+                    className="button secondary compact"
+                    onClick={() => editEmployee(employee)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    className="button danger compact"
+                    disabled={deletingId === employee.id}
+                    onClick={() => deleteEmployee(employee)}
+                  >
+                    {deletingId === employee.id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -151,10 +252,14 @@ export function EmployeeManagement() {
       <section className="panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">New Employee</p>
-            <h2>Add employee</h2>
+            <p className="eyebrow">
+              {editingId ? "Edit Employee" : "New Employee"}
+            </p>
+            <h2>{editingId ? "Edit employee" : "Add employee"}</h2>
             <p className="muted">
-              Create an employee record for asset custody assignment.
+              {editingId
+                ? "Update the selected employee record."
+                : "Create an employee record for asset custody assignment."}
             </p>
           </div>
         </div>
@@ -256,11 +361,38 @@ export function EmployeeManagement() {
                   ))}
                 </select>
               </label>
+
+              {editingId && (
+                <label className="employee-active-toggle field-wide">
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(event) =>
+                      updateField("isActive", event.target.checked)
+                    }
+                  />
+                  <span>Employee is active</span>
+                </label>
+              )}
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions employee-form-actions">
+              {editingId && (
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={clearForm}
+                >
+                  Cancel edit
+                </button>
+              )}
+
               <button type="submit" className="button primary">
-                {saving ? "Adding…" : "Add employee"}
+                {saving
+                  ? "Saving…"
+                  : editingId
+                    ? "Save changes"
+                    : "Add employee"}
               </button>
             </div>
           </fieldset>

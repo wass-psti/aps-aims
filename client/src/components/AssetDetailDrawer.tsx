@@ -5,11 +5,14 @@ import {
 } from "react";
 import { useAssetMasterData } from "../hooks/useAssetMasterData";
 import { aimsApi } from "../lib/api";
-import type {
-  Asset,
-  UpdateAssetRequest,
-} from "../types/aims";
+import { getStoredRole, hasCapability } from "../lib/permissions";
+import type { Asset, UpdateAssetRequest } from "../types/aims";
 import { AssetCustodyPanel } from "./AssetCustodyPanel";
+import { AssetIdentificationPanel } from "./AssetIdentificationPanel";
+import { AssetImagePlaceholder } from "./AssetImagePlaceholder";
+import { AssetIncidentPanel } from "./AssetIncidentPanel";
+import { AssetServicePanel } from "./AssetServicePanel";
+import { AssetTransactionsPanel } from "./AssetTransactionsPanel";
 
 interface AssetDetailDrawerProps {
   assetId: string | null;
@@ -46,7 +49,8 @@ function toEditState(asset: Asset): EditState {
 }
 
 function formatDate(value?: string | null) {
-  if (!value) return "—";
+  if (!value)
+    return "—";
 
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
@@ -59,14 +63,27 @@ export function AssetDetailDrawer({
   onClose,
   onUpdated,
 }: AssetDetailDrawerProps) {
-  const [asset, setAsset] = useState<Asset | null>(null);
-  const [form, setForm] = useState<EditState | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [asset, setAsset] =
+    useState<Asset | null>(null);
+  const [form, setForm] =
+    useState<EditState | null>(null);
+  const [editing, setEditing] =
+    useState(false);
+  const [loading, setLoading] =
+    useState(false);
+  const [saving, setSaving] =
+    useState(false);
+  const [error, setError] =
+    useState<string | null>(null);
 
-  const masterData = useAssetMasterData("", "");
+  const masterData =
+    useAssetMasterData("", "");
+
+  const canEditAsset =
+    hasCapability(
+      getStoredRole(),
+      "manageAssets",
+    );
 
   useEffect(() => {
     if (!assetId) {
@@ -77,6 +94,7 @@ export function AssetDetailDrawer({
       return;
     }
 
+    const currentAssetId = assetId;
     let cancelled = false;
 
     async function loadAsset() {
@@ -84,7 +102,8 @@ export function AssetDetailDrawer({
       setError(null);
 
       try {
-        const result = await aimsApi.getAsset(assetId);
+        const result =
+          await aimsApi.getAsset(currentAssetId);
 
         if (!cancelled) {
           setAsset(result);
@@ -99,9 +118,8 @@ export function AssetDetailDrawer({
           );
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled)
           setLoading(false);
-        }
       }
     }
 
@@ -113,34 +131,48 @@ export function AssetDetailDrawer({
   }, [assetId]);
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && assetId) {
+    function handleKeyDown(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === "Escape" && assetId)
         onClose();
-      }
     }
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () =>
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
   }, [assetId, onClose]);
 
-  if (!assetId) return null;
+  if (!assetId)
+    return null;
 
-  const updateField = <K extends keyof EditState>(
+  const updateField = <
+    K extends keyof EditState,
+  >(
     field: K,
     value: EditState[K],
   ) => {
     setForm((current) =>
-      current ? { ...current, [field]: value } : current,
+      current
+        ? { ...current, [field]: value }
+        : current,
     );
   };
 
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
+  async function handleSave(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
-    if (!asset || !form) return;
+    if (!asset || !form)
+      return;
 
     if (!form.name.trim()) {
       setError("Asset name is required.");
@@ -152,36 +184,57 @@ export function AssetDetailDrawer({
       return;
     }
 
-    if (form.currency.trim() && form.currency.trim().length !== 3) {
-      setError("Currency must be a three-letter ISO code.");
+    if (
+      form.currency.trim() &&
+      form.currency.trim().length !== 3
+    ) {
+      setError(
+        "Currency must be a three-letter ISO code.",
+      );
       return;
     }
 
-    if (form.acquisitionCost.trim() && Number(form.acquisitionCost) < 0) {
-      setError("Acquisition cost cannot be negative.");
+    if (
+      form.acquisitionCost.trim() &&
+      Number(form.acquisitionCost) < 0
+    ) {
+      setError(
+        "Acquisition cost cannot be negative.",
+      );
       return;
     }
 
     const payload: UpdateAssetRequest = {
       name: form.name.trim(),
-      shortDescription: form.shortDescription.trim(),
+      shortDescription:
+        form.shortDescription.trim(),
       categoryId: form.categoryId,
-      serialNumber: form.serialNumber.trim(),
-      manufacturer: form.manufacturer.trim(),
+      serialNumber:
+        form.serialNumber.trim(),
+      manufacturer:
+        form.manufacturer.trim(),
       model: form.model.trim(),
-      partNumber: form.partNumber.trim(),
-      legacyAssetId: form.legacyAssetId.trim(),
-      acquisitionCost: form.acquisitionCost.trim()
-        ? Number(form.acquisitionCost)
-        : null,
-      currency: form.currency.trim().toUpperCase(),
+      partNumber:
+        form.partNumber.trim(),
+      legacyAssetId:
+        form.legacyAssetId.trim(),
+      acquisitionCost:
+        form.acquisitionCost.trim()
+          ? Number(form.acquisitionCost)
+          : null,
+      currency:
+        form.currency.trim().toUpperCase(),
     };
 
     setSaving(true);
     setError(null);
 
     try {
-      const updated = await aimsApi.updateAsset(asset.id, payload);
+      const updated =
+        await aimsApi.updateAsset(
+          asset.id,
+          payload,
+        );
 
       setAsset(updated);
       setForm(toEditState(updated));
@@ -198,7 +251,9 @@ export function AssetDetailDrawer({
     }
   }
 
-  function applyChangedAsset(updated: Asset) {
+  function applyChangedAsset(
+    updated: Asset,
+  ) {
     setAsset(updated);
     setForm(toEditState(updated));
     onUpdated(updated);
@@ -208,16 +263,26 @@ export function AssetDetailDrawer({
     <div
       className="drawer-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
+        if (
+          event.target ===
+          event.currentTarget
+        )
           onClose();
-        }
       }}
     >
-      <aside className="asset-drawer" aria-label="Asset details">
+      <aside
+        className="asset-drawer"
+        aria-label="Asset details"
+      >
         <div className="drawer-header">
           <div>
-            <p className="eyebrow">Asset Detail</p>
-            <h2>{asset?.assetId ?? "Loading asset…"}</h2>
+            <p className="eyebrow">
+              Asset Detail
+            </p>
+            <h2>
+              {asset?.assetId ??
+                "Loading asset…"}
+            </h2>
           </div>
 
           <button
@@ -230,10 +295,16 @@ export function AssetDetailDrawer({
           </button>
         </div>
 
-        {error && <div className="alert error">{error}</div>}
+        {error && (
+          <div className="alert error">
+            {error}
+          </div>
+        )}
 
         {loading || !asset || !form ? (
-          <div className="drawer-loading">Loading asset details…</div>
+          <div className="drawer-loading">
+            Loading asset details…
+          </div>
         ) : (
           <>
             <div className="drawer-summary">
@@ -247,9 +318,55 @@ export function AssetDetailDrawer({
               </div>
               <div>
                 <span>Condition</span>
-                <strong>{asset.condition}</strong>
+                <strong>
+                  {asset.condition}
+                </strong>
               </div>
             </div>
+
+            <section className="asset-visual-overview">
+              <AssetImagePlaceholder
+                assetName={asset.name}
+                size="detail"
+              />
+
+              <div className="asset-visual-overview-copy">
+                <p className="eyebrow">Asset Overview</p>
+                <h3>{asset.name}</h3>
+
+                <div className="asset-overview-meta">
+                  <div>
+                    <span>Asset ID</span>
+                    <strong>{asset.assetId}</strong>
+                  </div>
+
+                  <div>
+                    <span>Category</span>
+                    <strong>{asset.categoryName}</strong>
+                  </div>
+
+                  <div>
+                    <span>Manufacturer / Model</span>
+                    <strong>
+                      {[asset.manufacturer, asset.model]
+                        .filter(Boolean)
+                        .join(" ") || "—"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Current Location</span>
+                    <strong>{asset.currentLocationName}</strong>
+                  </div>
+                </div>
+
+                <p className="muted asset-image-development-note">
+                  Placeholder only for the current development phase. The final
+                  image workflow will use managed Supabase Storage without
+                  changing this screen layout.
+                </p>
+              </div>
+            </section>
 
             <form onSubmit={handleSave}>
               <fieldset disabled={saving}>
@@ -262,11 +379,13 @@ export function AssetDetailDrawer({
                       </p>
                     </div>
 
-                    {!editing && (
+                    {!editing && canEditAsset && (
                       <button
                         type="button"
                         className="button secondary compact"
-                        onClick={() => setEditing(true)}
+                        onClick={() =>
+                          setEditing(true)
+                        }
                       >
                         Edit profile
                       </button>
@@ -280,7 +399,10 @@ export function AssetDetailDrawer({
                         <input
                           value={form.name}
                           onChange={(event) =>
-                            updateField("name", event.target.value)
+                            updateField(
+                              "name",
+                              event.target.value,
+                            )
                           }
                         />
                       </label>
@@ -290,68 +412,54 @@ export function AssetDetailDrawer({
                         <select
                           value={form.categoryId}
                           onChange={(event) =>
-                            updateField("categoryId", event.target.value)
+                            updateField(
+                              "categoryId",
+                              event.target.value,
+                            )
                           }
                         >
-                          {masterData.categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.parentCategoryName
-                                ? `${category.parentCategoryName} / ${category.name}`
-                                : category.name}
-                            </option>
-                          ))}
+                          {masterData.categories.map(
+                            (category) => (
+                              <option
+                                key={category.id}
+                                value={category.id}
+                              >
+                                {category.parentCategoryName
+                                  ? `${category.parentCategoryName} / ${category.name}`
+                                  : category.name}
+                              </option>
+                            ),
+                          )}
                         </select>
                       </label>
 
-                      <label className="field">
-                        <span>Serial number</span>
-                        <input
-                          value={form.serialNumber}
-                          onChange={(event) =>
-                            updateField("serialNumber", event.target.value)
-                          }
-                        />
-                      </label>
-
-                      <label className="field">
-                        <span>Manufacturer</span>
-                        <input
-                          value={form.manufacturer}
-                          onChange={(event) =>
-                            updateField("manufacturer", event.target.value)
-                          }
-                        />
-                      </label>
-
-                      <label className="field">
-                        <span>Model</span>
-                        <input
-                          value={form.model}
-                          onChange={(event) =>
-                            updateField("model", event.target.value)
-                          }
-                        />
-                      </label>
-
-                      <label className="field">
-                        <span>Part number</span>
-                        <input
-                          value={form.partNumber}
-                          onChange={(event) =>
-                            updateField("partNumber", event.target.value)
-                          }
-                        />
-                      </label>
-
-                      <label className="field">
-                        <span>Legacy asset ID</span>
-                        <input
-                          value={form.legacyAssetId}
-                          onChange={(event) =>
-                            updateField("legacyAssetId", event.target.value)
-                          }
-                        />
-                      </label>
+                      {[
+                        ["serialNumber", "Serial number"],
+                        ["manufacturer", "Manufacturer"],
+                        ["model", "Model"],
+                        ["partNumber", "Part number"],
+                        ["legacyAssetId", "Legacy asset ID"],
+                      ].map(([field, label]) => (
+                        <label
+                          className="field"
+                          key={field}
+                        >
+                          <span>{label}</span>
+                          <input
+                            value={
+                              form[
+                                field as keyof EditState
+                              ]
+                            }
+                            onChange={(event) =>
+                              updateField(
+                                field as keyof EditState,
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                      ))}
 
                       <label className="field">
                         <span>Acquisition cost</span>
@@ -361,7 +469,10 @@ export function AssetDetailDrawer({
                           step="0.01"
                           value={form.acquisitionCost}
                           onChange={(event) =>
-                            updateField("acquisitionCost", event.target.value)
+                            updateField(
+                              "acquisitionCost",
+                              event.target.value,
+                            )
                           }
                         />
                       </label>
@@ -386,7 +497,10 @@ export function AssetDetailDrawer({
                           rows={4}
                           value={form.shortDescription}
                           onChange={(event) =>
-                            updateField("shortDescription", event.target.value)
+                            updateField(
+                              "shortDescription",
+                              event.target.value,
+                            )
                           }
                         />
                       </label>
@@ -396,7 +510,9 @@ export function AssetDetailDrawer({
                           type="button"
                           className="button secondary"
                           onClick={() => {
-                            setForm(toEditState(asset));
+                            setForm(
+                              toEditState(asset),
+                            );
                             setEditing(false);
                             setError(null);
                           }}
@@ -404,20 +520,33 @@ export function AssetDetailDrawer({
                           Cancel
                         </button>
 
-                        <button type="submit" className="button primary">
-                          {saving ? "Saving…" : "Save changes"}
+                        <button
+                          type="submit"
+                          className="button primary"
+                        >
+                          {saving
+                            ? "Saving…"
+                            : "Save changes"}
                         </button>
                       </div>
                     </div>
                   ) : (
                     <dl className="detail-grid">
-                      <div><dt>Name</dt><dd>{asset.name}</dd></div>
-                      <div><dt>Category</dt><dd>{asset.categoryName}</dd></div>
-                      <div><dt>Serial number</dt><dd>{asset.serialNumber || "—"}</dd></div>
-                      <div><dt>Manufacturer</dt><dd>{asset.manufacturer || "—"}</dd></div>
-                      <div><dt>Model</dt><dd>{asset.model || "—"}</dd></div>
-                      <div><dt>Part number</dt><dd>{asset.partNumber || "—"}</dd></div>
-                      <div><dt>Legacy asset ID</dt><dd>{asset.legacyAssetId || "—"}</dd></div>
+                      {[
+                        ["Name", asset.name],
+                        ["Category", asset.categoryName],
+                        ["Serial number", asset.serialNumber],
+                        ["Manufacturer", asset.manufacturer],
+                        ["Model", asset.model],
+                        ["Part number", asset.partNumber],
+                        ["Legacy asset ID", asset.legacyAssetId],
+                      ].map(([label, value]) => (
+                        <div key={label}>
+                          <dt>{label}</dt>
+                          <dd>{value || "—"}</dd>
+                        </div>
+                      ))}
+
                       <div>
                         <dt>Acquisition cost</dt>
                         <dd>
@@ -426,9 +555,13 @@ export function AssetDetailDrawer({
                             : "—"}
                         </dd>
                       </div>
+
                       <div className="detail-wide">
                         <dt>Description</dt>
-                        <dd>{asset.shortDescription || "—"}</dd>
+                        <dd>
+                          {asset.shortDescription ||
+                            "—"}
+                        </dd>
                       </div>
                     </dl>
                   )}
@@ -437,31 +570,63 @@ export function AssetDetailDrawer({
                 <div className="drawer-section">
                   <div className="drawer-section-heading">
                     <div>
-                      <h3>Assignment &amp; lifecycle</h3>
+                      <h3>
+                        Assignment &amp; lifecycle
+                      </h3>
                       <p>
-                        Operational state changes through custody and future
-                        transaction workflows.
+                        Operational state changes through custody and transaction workflows.
                       </p>
                     </div>
                   </div>
 
                   <dl className="detail-grid">
-                    <div><dt>Company</dt><dd>{asset.companyName}</dd></div>
-                    <div><dt>Branch</dt><dd>{asset.branchName}</dd></div>
-                    <div><dt>Department</dt><dd>{asset.departmentName || "—"}</dd></div>
-                    <div><dt>Current location</dt><dd>{asset.currentLocationName}</dd></div>
-                    <div><dt>Custodian</dt><dd>{asset.currentCustodianName || "—"}</dd></div>
-                    <div><dt>Barcode</dt><dd>{asset.barcodeValue}</dd></div>
-                    <div><dt>Created</dt><dd>{formatDate(asset.createdAt)}</dd></div>
-                    <div><dt>Last updated</dt><dd>{formatDate(asset.updatedAt)}</dd></div>
+                    {[
+                      ["Company", asset.companyName],
+                      ["Branch", asset.branchName],
+                      ["Department", asset.departmentName],
+                      ["Current location", asset.currentLocationName],
+                      ["Custodian", asset.currentCustodianName],
+                      ["Barcode", asset.barcodeValue],
+                      ["Created", formatDate(asset.createdAt)],
+                      ["Last updated", formatDate(asset.updatedAt)],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <dt>{label}</dt>
+                        <dd>{value || "—"}</dd>
+                      </div>
+                    ))}
                   </dl>
                 </div>
               </fieldset>
             </form>
 
+            <AssetIdentificationPanel
+              asset={asset}
+            />
+
+            <AssetServicePanel
+              asset={asset}
+              onAssetChanged={
+                applyChangedAsset
+              }
+            />
+
+            <AssetIncidentPanel
+              asset={asset}
+            />
+
             <AssetCustodyPanel
               asset={asset}
-              onAssetChanged={applyChangedAsset}
+              onAssetChanged={
+                applyChangedAsset
+              }
+            />
+
+            <AssetTransactionsPanel
+              asset={asset}
+              onAssetChanged={
+                applyChangedAsset
+              }
             />
           </>
         )}

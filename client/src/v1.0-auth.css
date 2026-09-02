@@ -1,0 +1,70 @@
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f4f6f7;
+}
+
+.login-card {
+  width: min(440px, 100%);
+  padding: 28px;
+  border: 1px solid #dde2e6;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(20, 29, 36, 0.08);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.login-brand > div:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.login-brand span {
+  color: #76818a;
+  font-size: 11px;
+}
+
+.login-copy {
+  margin: 26px 0 18px;
+}
+
+.login-copy h1 {
+  margin: 4px 0 6px;
+  font-size: 30px;
+}
+
+.login-form {
+  display: grid;
+  gap: 15px;
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 5px;
+}
+
+.auth-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-user {
+  color: #65717b;
+  font-size: 11px;
+}
+
+@media (max-width: 800px) {
+  .auth-user {
+    display: none;
+  }
+}

@@ -1,0 +1,149 @@
+.identification-grid {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.qr-card {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  border: 1px solid #e1e5e8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.asset-qr-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-placeholder {
+  color: #7b858e;
+  font-size: 12px;
+}
+
+.identification-details {
+  display: grid;
+  gap: 14px;
+}
+
+.identification-details span {
+  display: block;
+  margin-bottom: 4px;
+  color: #77818a;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.identification-details strong {
+  font-size: 14px;
+}
+
+.mono-value {
+  font-family:
+    "SFMono-Regular", Consolas,
+    "Liberation Mono", monospace;
+}
+
+.identification-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.lookup-layout {
+  display: grid;
+  gap: 20px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.lookup-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 0 26px 16px;
+}
+
+.lookup-hint {
+  margin: 0;
+  padding: 0 26px 22px;
+  color: #77828b;
+  font-size: 12px;
+}
+
+.lookup-result {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 26px;
+  padding: 28px;
+  align-items: center;
+}
+
+.lookup-result-qr {
+  display: grid;
+  place-items: center;
+}
+
+.lookup-result-details h2 {
+  margin: 5px 0 4px;
+  font-size: 27px;
+}
+
+.lookup-result-details h3 {
+  margin: 0 0 20px;
+  color: #39444e;
+  font-size: 16px;
+}
+
+.lookup-detail-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+}
+
+.lookup-detail-grid dt {
+  color: #7b858e;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.lookup-detail-grid dd {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .identification-grid,
+  .lookup-result {
+    grid-template-columns: 1fr;
+  }
+
+  .lookup-form {
+    grid-template-columns: 1fr;
+  }
+
+  .lookup-form .button {
+    width: 100%;
+  }
+
+  .lookup-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .identification-actions {
+    flex-direction: column;
+  }
+
+  .identification-actions .button {
+    width: 100%;
+  }
+}

@@ -2,6 +2,7 @@ import {
   useEffect,
   useState,
   type FormEvent,
+  type KeyboardEvent,
 } from "react";
 import {
   ASSET_CONDITION_OPTIONS,
@@ -15,6 +16,7 @@ import type {
   AssetFilters,
 } from "../types/aims";
 import { AssetDetailDrawer } from "./AssetDetailDrawer";
+import { AssetImagePlaceholder } from "./AssetImagePlaceholder";
 
 interface AssetRegistryProps {
   refreshToken: number;
@@ -52,8 +54,6 @@ export function AssetRegistry({
     draftFilters.branchId ?? "",
   );
 
-  // Live search with debounce: only the search term is auto-applied.
-  // Other filters remain controlled by Apply filters.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const search = draftFilters.search?.trim() ?? "";
@@ -123,6 +123,22 @@ export function AssetRegistry({
 
       return next;
     });
+  };
+
+  const openAsset = (assetId: string) => {
+    setSelectedAssetId(assetId);
+  };
+
+  const handleAssetRowKeyDown = (
+    event: KeyboardEvent<HTMLTableRowElement>,
+    assetId: string,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    openAsset(assetId);
   };
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
@@ -346,24 +362,39 @@ export function AssetRegistry({
 
               <tbody>
                 {assets.map((asset) => (
-                  <tr key={asset.id}>
+                  <tr
+                    key={asset.id}
+                    className="asset-row"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${asset.assetId} ${asset.name}`}
+                    onClick={() => openAsset(asset.id)}
+                    onKeyDown={(event) =>
+                      handleAssetRowKeyDown(event, asset.id)
+                    }
+                  >
                     <td>
-                      <button
-                        type="button"
-                        className="asset-link"
-                        onClick={() => setSelectedAssetId(asset.id)}
-                      >
+                      <span className="asset-link">
                         {asset.assetId}
-                      </button>
+                      </span>
                     </td>
 
                     <td>
-                      <strong>{asset.name}</strong>
-                      <span className="cell-subtitle">
-                        {[asset.manufacturer, asset.model]
-                          .filter(Boolean)
-                          .join(" ") || "—"}
-                      </span>
+                      <div className="asset-registry-preview">
+                        <AssetImagePlaceholder
+                          assetName={asset.name}
+                          size="thumbnail"
+                        />
+
+                        <div className="asset-registry-preview-copy">
+                          <strong>{asset.name}</strong>
+                          <span className="cell-subtitle">
+                            {[asset.manufacturer, asset.model]
+                              .filter(Boolean)
+                              .join(" ") || "—"}
+                          </span>
+                        </div>
+                      </div>
                     </td>
 
                     <td>{asset.categoryName}</td>
