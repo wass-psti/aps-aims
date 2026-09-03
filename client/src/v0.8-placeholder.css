@@ -14,11 +14,10 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid #d9dfe4;
-  border-radius: 9px;
-  background:
-    linear-gradient(135deg, #f8f9fa 0%, #eef1f3 100%);
-  color: #66717a;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #f2f3fc 0%, #eceefb 100%);
+  color: var(--primary-soft-text);
 }
 
 .asset-image-placeholder.thumbnail {
@@ -40,10 +39,10 @@
   width: 40px;
   height: 40px;
   place-items: center;
-  border: 1px solid #cfd6dc;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #35414b;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -60,7 +59,7 @@
   right: 16px;
   bottom: 14px;
   left: 16px;
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 10px;
   line-height: 1.4;
 }
@@ -71,13 +70,14 @@
   gap: 28px;
   align-items: center;
   padding: 24px;
-  border-bottom: 1px solid #e7eaed;
-  background: #fafbfb;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
 }
 
 .asset-visual-overview-copy h3 {
   margin: 5px 0 18px;
-  font-size: 24px;
+  font-size: 23px;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -90,7 +90,7 @@
 .asset-overview-meta span {
   display: block;
   margin-bottom: 4px;
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -98,7 +98,7 @@
 
 .asset-overview-meta strong {
   display: block;
-  color: #202a33;
+  color: var(--text);
   font-size: 13px;
   overflow-wrap: anywhere;
 }

@@ -11,9 +11,9 @@
 .service-form {
   margin-bottom: 20px;
   padding: 16px;
-  border: 1px solid #dfe4e8;
-  border-radius: 8px;
-  background: #fafbfb;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-alt);
 }
 
 .service-form .field + .field {
@@ -37,6 +37,7 @@
 .service-history-grid h4 {
   margin: 0 0 10px;
   font-size: 13px;
+  font-weight: 700;
 }
 
 .service-history-list {
@@ -46,9 +47,14 @@
 
 .service-history-item {
   padding: 13px;
-  border: 1px solid #e1e5e8;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  transition: border-color 130ms var(--ease);
+}
+
+.service-history-item:hover {
+  border-color: var(--border-strong);
 }
 
 .service-history-heading {
@@ -61,10 +67,11 @@
 
 .service-history-heading strong {
   font-size: 12px;
+  font-weight: 600;
 }
 
 .service-history-heading span {
-  color: #6f7982;
+  color: var(--text-tertiary);
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
@@ -72,7 +79,7 @@
 
 .service-history-item p {
   margin: 4px 0;
-  color: #59656f;
+  color: var(--text-secondary);
   font-size: 11px;
 }
 

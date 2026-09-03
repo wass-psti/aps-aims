@@ -13,38 +13,31 @@
   display: inline-flex !important;
   width: fit-content;
   margin: 0 !important;
-  padding: 3px 6px;
-  border: 1px solid #d6dce1;
-  border-radius: 999px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
   font-size: 9px !important;
   font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .employee-status.active {
-  background: #f3faf5;
-  color: #2e6a3d;
+  border-color: var(--success-border);
+  background: var(--success-soft);
+  color: var(--success-text);
 }
 
 .employee-status.inactive {
-  background: #f6f7f8;
-  color: #737d86;
+  border-color: var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-tertiary);
 }
 
 .employee-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-}
-
-.button.danger {
-  border: 1px solid #d9aaaa;
-  background: #fff;
-  color: #9a3030;
-}
-
-.button.danger:hover {
-  background: #fff6f6;
 }
 
 .employee-active-toggle {
@@ -59,6 +52,7 @@
   height: 16px;
   min-height: auto;
   margin: 0;
+  accent-color: var(--primary);
 }
 
 .employee-active-toggle span {

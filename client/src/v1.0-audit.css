@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 18px;
-  border-top: 1px solid #edf0f2;
+  border-top: 1px solid var(--border);
 }
 
 .audit-toolbar .search-field {
@@ -12,8 +12,9 @@
 }
 
 .audit-failed {
-  background: #fff0f0;
-  color: #8d3030;
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 @media (max-width: 700px) {

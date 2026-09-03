@@ -9,9 +9,9 @@
   display: grid;
   place-items: center;
   min-height: 200px;
-  border: 1px solid #e1e5e8;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
 }
 
 .asset-qr-image {
@@ -21,7 +21,7 @@
 }
 
 .qr-placeholder {
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 12px;
 }
 
@@ -33,7 +33,7 @@
 .identification-details span {
   display: block;
   margin-bottom: 4px;
-  color: #77818a;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -41,12 +41,11 @@
 
 .identification-details strong {
   font-size: 14px;
+  font-weight: 700;
 }
 
 .mono-value {
-  font-family:
-    "SFMono-Regular", Consolas,
-    "Liberation Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .identification-actions {
@@ -73,7 +72,7 @@
 .lookup-hint {
   margin: 0;
   padding: 0 26px 22px;
-  color: #77828b;
+  color: var(--text-tertiary);
   font-size: 12px;
 }
 
@@ -92,13 +91,16 @@
 
 .lookup-result-details h2 {
   margin: 5px 0 4px;
-  font-size: 27px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .lookup-result-details h3 {
   margin: 0 0 20px;
-  color: #39444e;
+  color: var(--text-secondary);
   font-size: 16px;
+  font-weight: 600;
 }
 
 .lookup-detail-grid {
@@ -110,7 +112,7 @@
 }
 
 .lookup-detail-grid dt {
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;

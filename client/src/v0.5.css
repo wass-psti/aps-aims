@@ -10,9 +10,9 @@
 .custody-form {
   margin-bottom: 20px;
   padding: 16px;
-  border: 1px solid #dfe4e8;
-  border-radius: 8px;
-  background: #fafbfb;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-alt);
 }
 
 .custody-form .field + .field {
@@ -26,9 +26,15 @@
 
 .history-item {
   padding: 14px;
-  border: 1px solid #e1e5e8;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  transition: border-color 130ms var(--ease), box-shadow 130ms var(--ease);
+}
+
+.history-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-xs);
 }
 
 .history-item-heading {
@@ -40,14 +46,14 @@
 }
 
 .history-item-heading span {
-  color: #78828b;
+  color: var(--text-tertiary);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .history-item-heading .history-open {
-  color: #8a5a00;
+  color: var(--warning-text);
 }
 
 .history-meta {
@@ -58,7 +64,7 @@
 }
 
 .history-meta dt {
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -72,8 +78,8 @@
 .history-notes {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid #edf0f2;
-  color: #55616b;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 12px;
 }
 
@@ -83,7 +89,7 @@
 
 .history-empty {
   padding: 22px 0 4px;
-  color: #7a858f;
+  color: var(--text-tertiary);
   text-align: center;
   font-size: 12px;
 }
@@ -96,7 +102,7 @@
 }
 
 .employee-list {
-  border-top: 1px solid #e5e9ec;
+  border-top: 1px solid var(--border);
 }
 
 .employee-row {
@@ -104,7 +110,12 @@
   grid-template-columns: 1.2fr 1fr 1fr;
   gap: 16px;
   padding: 15px 24px;
-  border-bottom: 1px solid #edf0f2;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 120ms var(--ease);
+}
+
+.employee-row:hover {
+  background: var(--surface-alt);
 }
 
 .employee-row strong,
@@ -114,11 +125,12 @@
 
 .employee-row strong {
   font-size: 13px;
+  font-weight: 600;
 }
 
 .employee-row span {
   margin-top: 3px;
-  color: #77828b;
+  color: var(--text-tertiary);
   font-size: 11px;
 }
 
@@ -127,7 +139,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   padding: 22px 24px;
-  border-top: 1px solid #e8ebee;
+  border-top: 1px solid var(--border);
 }
 
 @media (max-width: 1000px) {

@@ -6,7 +6,8 @@
 .drawer-backdrop {
   align-items: stretch;
   justify-content: stretch;
-  background: #fff;
+  background: var(--surface);
+  backdrop-filter: none;
 }
 
 .asset-drawer {
@@ -15,6 +16,7 @@
   height: 100vh;
   border-left: 0;
   box-shadow: none;
+  animation: aps-fade-in 180ms var(--ease);
 }
 
 .asset-drawer .drawer-header {
@@ -24,24 +26,24 @@
 .asset-row {
   cursor: pointer;
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color 120ms var(--ease),
+    box-shadow 120ms var(--ease);
 }
 
 .asset-row:hover {
-  background: #f5f7f8;
+  background: var(--surface-alt);
 }
 
 .asset-row:focus-visible {
   position: relative;
   z-index: 1;
-  outline: 2px solid #263746;
+  outline: 2px solid var(--primary);
   outline-offset: -2px;
-  background: #f5f7f8;
+  background: var(--primary-soft);
 }
 
 .asset-row:active {
-  background: #edf1f3;
+  background: var(--surface-sunken);
 }
 
 .asset-row td {
@@ -56,8 +58,11 @@
   color: inherit;
   font: inherit;
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
+}
+
+.asset-row:hover .asset-link {
+  color: var(--primary);
 }
 
 @media (max-width: 700px) {

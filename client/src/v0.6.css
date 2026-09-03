@@ -5,9 +5,9 @@
 .transaction-form {
   margin-bottom: 20px;
   padding: 16px;
-  border: 1px solid #dfe4e8;
-  border-radius: 8px;
-  background: #fafbfb;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-alt);
 }
 
 .transaction-form .field + .field {
@@ -21,9 +21,15 @@
 
 .transaction-item {
   padding: 14px;
-  border: 1px solid #e1e5e8;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  transition: border-color 130ms var(--ease), box-shadow 130ms var(--ease);
+}
+
+.transaction-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-xs);
 }
 
 .transaction-heading {
@@ -36,10 +42,11 @@
 
 .transaction-heading strong {
   font-size: 13px;
+  font-weight: 600;
 }
 
 .transaction-heading span {
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 11px;
 }
 
@@ -51,7 +58,7 @@
 }
 
 .transaction-meta dt {
-  color: #7b858e;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -59,15 +66,15 @@
 
 .transaction-meta dd {
   margin: 3px 0 0;
-  color: #263039;
+  color: var(--text);
   font-size: 12px;
 }
 
 .transaction-note {
   margin: 12px 0 0;
   padding-top: 10px;
-  border-top: 1px solid #edf0f2;
-  color: #55616b;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 12px;
 }
 

@@ -1,18 +1,49 @@
 .login-shell {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 24px;
-  background: #f4f6f7;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.login-shell::before,
+.login-shell::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.login-shell::before {
+  top: -180px;
+  left: -160px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, #6a61f0 0%, transparent 70%);
+}
+
+.login-shell::after {
+  right: -180px;
+  bottom: -200px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, #8b7cf6 0%, transparent 70%);
 }
 
 .login-card {
+  position: relative;
+  z-index: 1;
   width: min(440px, 100%);
-  padding: 28px;
-  border: 1px solid #dde2e6;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 16px 40px rgba(20, 29, 36, 0.08);
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
 }
 
 .login-brand {
@@ -20,7 +51,7 @@
   align-items: center;
   gap: 12px;
   padding-bottom: 22px;
-  border-bottom: 1px solid #edf0f2;
+  border-bottom: 1px solid var(--border);
 }
 
 .login-brand > div:last-child {
@@ -29,7 +60,7 @@
 }
 
 .login-brand span {
-  color: #76818a;
+  color: var(--text-tertiary);
   font-size: 11px;
 }
 
@@ -39,7 +70,9 @@
 
 .login-copy h1 {
   margin: 4px 0 6px;
-  font-size: 30px;
+  font-size: 29px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .login-form {
@@ -59,8 +92,9 @@
 }
 
 .auth-user {
-  color: #65717b;
-  font-size: 11px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 @media (max-width: 800px) {
